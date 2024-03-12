@@ -5,13 +5,15 @@ using MonoGame.Extended.Tiled;
 using MonoGame.Extended.Tiled.Renderers;
 using MonoGame.Extended;
 using MonoGame.Extended.ViewportAdapters;
+using MonoGame.Extended.Screens;
+using NNGame.Classes;
 
 namespace NNGame
 {
     public class Main : Game
     {
         private GraphicsDeviceManager _graphics;
-        private SpriteBatch _spriteBatch;
+        public SpriteBatch _spriteBatch;
 
         public TiledMap _tiledMap;
         private TiledMapRenderer _tiledMapRenderer;
@@ -19,11 +21,18 @@ namespace NNGame
         private OrthographicCamera _camera;
         private Vector2 _cameraPosition;
 
+        private readonly ScreenManager _screenManager;
+
+        private ScreenLoader _screenLoader;
+
         public Main()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
+
+            _screenManager = new ScreenManager();
+            Components.Add(_screenManager);
         }
 
         /// <summary>
@@ -31,10 +40,14 @@ namespace NNGame
         /// </summary>
         protected override void Initialize()
         {
-            var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 800, 600);
+            //Debug
+            var viewportadapter = new BoxingViewportAdapter(Window, base.GraphicsDevice, 800, 600);
             _camera = new OrthographicCamera(viewportadapter);
+            //
 
             base.Initialize();
+
+            //_screenLoader = new ScreenLoader(this, _screenManager, _graphics.GraphicsDevice);
         }
 
         /// <summary>
@@ -42,10 +55,11 @@ namespace NNGame
         /// </summary>
         protected override void LoadContent()
         {
+            //Debug
             _tiledMap = Content.Load<TiledMap>("Tilemaps/Grass");
             _tiledMapRenderer = new TiledMapRenderer(GraphicsDevice, _tiledMap);
-
             _spriteBatch = new SpriteBatch(GraphicsDevice);
+            //
 
             //use this.Content to load your game content here
         }
@@ -56,13 +70,13 @@ namespace NNGame
         /// <param name="gameTime"></param>
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            if (Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-
-            _tiledMapRenderer.Update(gameTime);
-
+           
+            _tiledMapRenderer.Update(gameTime);    
+            
             MoveCamera(gameTime);
-            _camera.LookAt(_cameraPosition);
+            _camera.LookAt(_cameraPosition);            
 
             base.Update(gameTime);
         }
@@ -74,7 +88,7 @@ namespace NNGame
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Black);
-
+            
             _tiledMapRenderer.Draw(_camera.GetViewMatrix());
 
             //_tiledMapRenderer.Draw();
@@ -85,19 +99,19 @@ namespace NNGame
             var movementDirection = Vector2.Zero;
             var state = Keyboard.GetState();
 
-            if (state.IsKeyDown(Keys.Down) || state.IsKeyDown(Keys.S))
-            {
-                movementDirection += Vector2.UnitY;
-            }
-            if (state.IsKeyDown(Keys.Up) || state.IsKeyDown(Keys.W))
+            if (state.IsKeyDown(Keys.W))
             {
                 movementDirection -= Vector2.UnitY;
             }
-            if (state.IsKeyDown(Keys.Left) || state.IsKeyDown(Keys.A))
+            if (state.IsKeyDown(Keys.A))
             {
                 movementDirection -= Vector2.UnitX;
             }
-            if (state.IsKeyDown(Keys.Right) || state.IsKeyDown(Keys.D))
+            if (state.IsKeyDown(Keys.S))
+            {
+                movementDirection += Vector2.UnitY;
+            }         
+            if (state.IsKeyDown(Keys.D))
             {
                 movementDirection += Vector2.UnitX;
             }
