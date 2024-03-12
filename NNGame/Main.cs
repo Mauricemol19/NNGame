@@ -33,6 +33,9 @@ namespace NNGame
 
             _screenManager = new ScreenManager();
             Components.Add(_screenManager);
+
+            Window.IsBorderless = true;
+            _graphics.IsFullScreen = true;           
         }
 
         /// <summary>
