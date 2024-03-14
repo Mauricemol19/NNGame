@@ -19,6 +19,7 @@
     <EmbeddedResource Include="Icon.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="GeonBit.UI" Version="4.3.0" />
     <PackageReference Include="MonoGame.Extended" Version="3.9.0-alpha0107" />
     <PackageReference Include="MonoGame.Extended.Content.Pipeline" Version="3.9.0-alpha0107" />
     <PackageReference Include="MonoGame.Extended.Graphics" Version="3.9.0-alpha0107" />
@@ -30,10 +31,10 @@
     <Folder Include="Classes\EventManager\" />
     <Folder Include="Classes\ECS\" />
     <Folder Include="Classes\WorldManager\" />
+    <Folder Include="GeonBit.UI\Themes\" />
     <Folder Include="Content\Sprites\" />
     <Folder Include="Content\Tilemaps\" />
     <Folder Include="Content\Tilesheets\" />
-    <Folder Include="Enums\" />
   </ItemGroup>
   <Target Name="RestoreDotnetTools" BeforeTargets="Restore">
     <Message Text="Restoring dotnet tools" Importance="High" />

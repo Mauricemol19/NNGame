@@ -7,35 +7,43 @@ using MonoGame.Extended;
 using MonoGame.Extended.ViewportAdapters;
 using MonoGame.Extended.Screens;
 using NNGame.Classes;
+using NNGame.Classes.Gui;
+using GeonBit.UI;
+using GeonBit.UI.Entities;
+using System.Collections.Generic;
+using Autofac.Core;
 
 namespace NNGame
 {
     public class Main : Game
     {
-        private GraphicsDeviceManager _graphics;
+        public GraphicsDeviceManager _graphics;
         public SpriteBatch _spriteBatch;
 
         public TiledMap _tiledMap;
-        private TiledMapRenderer _tiledMapRenderer;
+        public TiledMapRenderer _tiledMapRenderer;
 
-        private OrthographicCamera _camera;
-        private Vector2 _cameraPosition;
+        public OrthographicCamera _camera;
+        public Vector2 _cameraPosition;
 
         private readonly ScreenManager _screenManager;
 
         private ScreenLoader _screenLoader;
 
+        public Vector2 _worldPosition;
+
+        public string current_screen = "Menu";
+
+        public GameMenu _gameMenu;
+
         public Main()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-            IsMouseVisible = true;
+            IsMouseVisible = true;                     
 
             _screenManager = new ScreenManager();
-            Components.Add(_screenManager);
-
-            Window.IsBorderless = true;
-            _graphics.IsFullScreen = true;           
+            Components.Add(_screenManager);                          
         }
 
         /// <summary>
@@ -43,14 +51,33 @@ namespace NNGame
         /// </summary>
         protected override void Initialize()
         {
+            //TODO: adjust scaling/fullscreen etc.  
+            //var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 1920, 1080);
+            //var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 480, 270);
+            var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 640, 360);
+
+            _graphics.PreferredBackBufferWidth = viewportadapter.GraphicsDevice.Adapter.CurrentDisplayMode.Width;
+            _graphics.PreferredBackBufferHeight = viewportadapter.GraphicsDevice.Adapter.CurrentDisplayMode.Height;
+
             //Debug
-            var viewportadapter = new BoxingViewportAdapter(Window, base.GraphicsDevice, 800, 600);
+            _graphics.ToggleFullScreen();
+            Window.IsBorderless = true;
+            Window.AllowUserResizing = true;            
+
+            //_graphics.HardwareModeSwitch = false;
+
+            //TODO: Player/cam class
             _camera = new OrthographicCamera(viewportadapter);
-            //
+         
+            _screenLoader = new ScreenLoader(this, _screenManager, _graphics.GraphicsDevice);
+
+            //TODO: Add Menu
+
+            //Debug
+            UserInterface.Initialize(Content, BuiltinThemes.hd);
+            _gameMenu = new GameMenu();
 
             base.Initialize();
-
-            //_screenLoader = new ScreenLoader(this, _screenManager, _graphics.GraphicsDevice);
         }
 
         /// <summary>
@@ -58,13 +85,8 @@ namespace NNGame
         /// </summary>
         protected override void LoadContent()
         {
-            //Debug
-            _tiledMap = Content.Load<TiledMap>("Tilemaps/Grass");
-            _tiledMapRenderer = new TiledMapRenderer(GraphicsDevice, _tiledMap);
-            _spriteBatch = new SpriteBatch(GraphicsDevice);
-            //
-
             //use this.Content to load your game content here
+            _spriteBatch = new SpriteBatch(GraphicsDevice);
         }
 
         /// <summary>
@@ -74,12 +96,22 @@ namespace NNGame
         protected override void Update(GameTime gameTime)
         {
             if (Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
-           
-            _tiledMapRenderer.Update(gameTime);    
-            
-            MoveCamera(gameTime);
-            _camera.LookAt(_cameraPosition);            
+                Exit();          
+
+            if (current_screen != "Menu" && _camera != null)
+            {
+                const float movementSpeed = 200;
+                _camera.Move(GetMovementDirection() * movementSpeed * gameTime.GetElapsedSeconds());
+
+                //Debug
+                var mouseState = Mouse.GetState();
+                _worldPosition = _camera.ScreenToWorld(new Vector2(mouseState.X, mouseState.Y));         
+
+                var p = _gameMenu.panel1.Children[0] as Paragraph;
+                {
+                    p.Text = "x:" + mouseState.X + "\n" + "y:" + mouseState.Y + "\n" + "Tile: ";
+                }             
+            }
 
             base.Update(gameTime);
         }
@@ -89,10 +121,25 @@ namespace NNGame
         /// </summary>
         /// <param name="gameTime"></param>
         protected override void Draw(GameTime gameTime)
-        {
-            GraphicsDevice.Clear(Color.Black);
-            
-            _tiledMapRenderer.Draw(_camera.GetViewMatrix());
+        {      
+            if (current_screen != "Menu" && _tiledMapRenderer != null)
+            {           
+                const float movementSpeed = 200;
+                _camera.Move(GetMovementDirection() * movementSpeed * gameTime.GetElapsedSeconds());
+
+                GraphicsDevice.Clear(Color.White);
+                _tiledMapRenderer.Draw(_camera.GetViewMatrix());
+
+                UserInterface.Active.Draw(_spriteBatch);   
+
+                /*
+                 * Drawing with spritebatch
+                var transformMatrix = _camera.GetViewMatrix();
+                _spriteBatch.Begin(transformMatrix: transformMatrix);
+                _spriteBatch.DrawRectangle(new RectangleF(250, 250, 50, 50), Color.Black, 1f);
+                _spriteBatch.End();
+                */
+            }
 
             //_tiledMapRenderer.Draw();
         }
@@ -128,7 +175,7 @@ namespace NNGame
             return movementDirection;
         }
 
-        private void MoveCamera(GameTime gameTime)
+        public void MoveCamera(GameTime gameTime)
         {
             var speed = 200;
             var seconds = gameTime.GetElapsedSeconds();
