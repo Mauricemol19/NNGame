@@ -3,6 +3,8 @@ using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended.Screens.Transitions;
 using MonoGame.Extended.Screens;
 using NNGame.Classes.Screens;
+using MonoGame.Extended.Tiled;
+using MonoGame.Extended.Tiled.Renderers;
 
 namespace NNGame.Classes
 {
@@ -19,23 +21,17 @@ namespace NNGame.Classes
             GraphicsDevice = _graphicsDevice;
 
             LoadMenu();
+            LoadMap();
         }
 
         public void LoadMenu()
-        {
-            ScreenManager.LoadScreen(new Menu(Main), new FadeTransition(GraphicsDevice, Color.Black));
+        {                        
+            //ScreenManager.LoadScreen(new Menu(Main), new FadeTransition(GraphicsDevice, Color.Black));
         }
 
         public void LoadMap()
         {
-
-        }
-
-        private void LoadTiledMap() 
-        {
-            //_tiledMap = Content.Load<TiledMap>("Tilemaps/Grass");
-            //_tiledMapRenderer = new TiledMapRenderer(GraphicsDevice, _tiledMap);
-            //_spriteBatch = new SpriteBatch(GraphicsDevice);
+            ScreenManager.LoadScreen(new Map1(Main), new FadeTransition(GraphicsDevice, Color.Black));
         }
     }
 }
