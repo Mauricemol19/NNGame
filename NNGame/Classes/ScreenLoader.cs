@@ -20,6 +20,9 @@ namespace NNGame.Classes
             ScreenManager = _screenManager; 
             GraphicsDevice = _graphicsDevice;
 
+            //Main._graphics.PreferredBackBufferWidth = viewportadapter.GraphicsDevice.Adapter.CurrentDisplayMode.Width;
+            //Main._graphics.PreferredBackBufferHeight = viewportadapter.GraphicsDevice.Adapter.CurrentDisplayMode.Height;
+
             LoadMenu();
             LoadMap();
         }

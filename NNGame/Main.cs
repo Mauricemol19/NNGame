@@ -52,19 +52,19 @@ namespace NNGame
         protected override void Initialize()
         {
             //TODO: adjust scaling/fullscreen etc.  
-            //var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 1920, 1080);
-            //var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 480, 270);
             var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 640, 360);
 
-            _graphics.PreferredBackBufferWidth = viewportadapter.GraphicsDevice.Adapter.CurrentDisplayMode.Width;
-            _graphics.PreferredBackBufferHeight = viewportadapter.GraphicsDevice.Adapter.CurrentDisplayMode.Height;
+            //_graphics.PreferredBackBufferWidth = viewportadapter.GraphicsDevice.Adapter.CurrentDisplayMode.Width;           
+            //_graphics.PreferredBackBufferHeight = viewportadapter.GraphicsDevice.Adapter.CurrentDisplayMode.Height;
+            _graphics.PreferredBackBufferWidth = 1920;
+            _graphics.PreferredBackBufferHeight = 1080;
 
             //Debug
-            _graphics.ToggleFullScreen();
-            Window.IsBorderless = true;
+            //_graphics.ToggleFullScreen();
+            //Window.IsBorderless = true;
             Window.AllowUserResizing = true;            
 
-            //_graphics.HardwareModeSwitch = false;
+            _graphics.HardwareModeSwitch = false;
 
             //TODO: Player/cam class
             _camera = new OrthographicCamera(viewportadapter);
@@ -105,11 +105,11 @@ namespace NNGame
 
                 //Debug
                 var mouseState = Mouse.GetState();
-                _worldPosition = _camera.ScreenToWorld(new Vector2(mouseState.X, mouseState.Y));         
+                _worldPosition = _camera.WorldToScreen(new Vector2(mouseState.X, mouseState.Y));
 
                 var p = _gameMenu.panel1.Children[0] as Paragraph;
                 {
-                    p.Text = "x:" + mouseState.X + "\n" + "y:" + mouseState.Y + "\n" + "Tile: ";
+                    p.Text = "x:" + mouseState.X / 32 + "\n" + "y:" + mouseState.Y / 32 + "\n" + "Tile: ";
                 }             
             }
 
@@ -127,18 +127,16 @@ namespace NNGame
                 const float movementSpeed = 200;
                 _camera.Move(GetMovementDirection() * movementSpeed * gameTime.GetElapsedSeconds());
 
-                GraphicsDevice.Clear(Color.White);
+                GraphicsDevice.Clear(Color.Black);
                 _tiledMapRenderer.Draw(_camera.GetViewMatrix());
 
-                UserInterface.Active.Draw(_spriteBatch);   
+                UserInterface.Active.Draw(_spriteBatch);
 
-                /*
-                 * Drawing with spritebatch
+                var mouseState = Mouse.GetState();
                 var transformMatrix = _camera.GetViewMatrix();
                 _spriteBatch.Begin(transformMatrix: transformMatrix);
-                _spriteBatch.DrawRectangle(new RectangleF(250, 250, 50, 50), Color.Black, 1f);
+                _spriteBatch.DrawRectangle(new RectangleF(mouseState.X, mouseState.Y, 50, 50), Color.Black, 1f);
                 _spriteBatch.End();
-                */
             }
 
             //_tiledMapRenderer.Draw();
@@ -149,9 +147,19 @@ namespace NNGame
             var movementDirection = Vector2.Zero;
             var state = Keyboard.GetState();
 
+            if (movementDirection.X < 0 )
+            {
+                movementDirection.X = 0;
+            }
+
+            if (movementDirection.Y < 0)
+            {
+                movementDirection.Y = 0;
+            }
+
             if (state.IsKeyDown(Keys.W))
             {
-                movementDirection -= Vector2.UnitY;
+                movementDirection -= Vector2.UnitY;    
             }
             if (state.IsKeyDown(Keys.A))
             {
@@ -171,7 +179,7 @@ namespace NNGame
             {
                 movementDirection.Normalize();
             }
-
+         
             return movementDirection;
         }
 
