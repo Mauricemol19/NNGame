@@ -10,9 +10,9 @@ namespace NNGame.Classes
 {
     internal class ScreenLoader
     {
-        private readonly Main Main;
-        private readonly ScreenManager ScreenManager;
-        private readonly GraphicsDevice GraphicsDevice;
+        private Main Main;
+        public ScreenManager ScreenManager;
+        public GraphicsDevice GraphicsDevice;
 
         public ScreenLoader(Main _main, ScreenManager _screenManager, GraphicsDevice _graphicsDevice)
         {
@@ -35,6 +35,6 @@ namespace NNGame.Classes
         public void LoadMap()
         {
             ScreenManager.LoadScreen(new Map1(Main), new FadeTransition(GraphicsDevice, Color.Black));
-        }
+        }        
     }
 }

@@ -26,8 +26,7 @@ namespace NNGame
         public OrthographicCamera _camera;
         public Vector2 _cameraPosition;
 
-        private readonly ScreenManager _screenManager;
-
+        private ScreenManager _screenManager;
         private ScreenLoader _screenLoader;
 
         public Vector2 _worldPosition;
@@ -35,6 +34,8 @@ namespace NNGame
         public string current_screen = "Menu";
 
         public GameMenu _gameMenu;
+
+        public BoxingViewportAdapter viewportadapter;
 
         public Main()
         {
@@ -52,7 +53,7 @@ namespace NNGame
         protected override void Initialize()
         {
             //TODO: adjust scaling/fullscreen etc.  
-            var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 640, 360);
+            viewportadapter = new BoxingViewportAdapter(Window, _graphics.GraphicsDevice, 640, 360);
 
             //_graphics.PreferredBackBufferWidth = viewportadapter.GraphicsDevice.Adapter.CurrentDisplayMode.Width;           
             //_graphics.PreferredBackBufferHeight = viewportadapter.GraphicsDevice.Adapter.CurrentDisplayMode.Height;
@@ -65,11 +66,14 @@ namespace NNGame
             Window.AllowUserResizing = true;            
 
             _graphics.HardwareModeSwitch = false;
-
-            //TODO: Player/cam class
-            _camera = new OrthographicCamera(viewportadapter);
          
             _screenLoader = new ScreenLoader(this, _screenManager, _graphics.GraphicsDevice);
+
+            //TODO: Player/cam class            
+            //_camera = new Camera(viewportadapter);
+            //_camera = new OrthographicCamera(_graphics.GraphicsDevice);
+            //_camera = new OrthographicCamera(_screenManager);
+            _camera = new OrthographicCamera(_screenLoader.GraphicsDevice);
 
             //TODO: Add Menu
 
@@ -86,7 +90,7 @@ namespace NNGame
         protected override void LoadContent()
         {
             //use this.Content to load your game content here
-            _spriteBatch = new SpriteBatch(GraphicsDevice);
+            _spriteBatch = new SpriteBatch(_graphics.GraphicsDevice);
         }
 
         /// <summary>
@@ -103,7 +107,7 @@ namespace NNGame
                 const float movementSpeed = 200;
                 _camera.Move(GetMovementDirection() * movementSpeed * gameTime.GetElapsedSeconds());
 
-                //Debug
+                //Debug TODO:only for current viewport
                 var mouseState = Mouse.GetState();
                 _worldPosition = _camera.WorldToScreen(new Vector2(mouseState.X, mouseState.Y));
 
@@ -127,15 +131,15 @@ namespace NNGame
                 const float movementSpeed = 200;
                 _camera.Move(GetMovementDirection() * movementSpeed * gameTime.GetElapsedSeconds());
 
-                GraphicsDevice.Clear(Color.Black);
-                _tiledMapRenderer.Draw(_camera.GetViewMatrix());
+                _graphics.GraphicsDevice.Clear(Color.Black);
+                _tiledMapRenderer.Draw(_camera.GetViewMatrix());              
 
                 UserInterface.Active.Draw(_spriteBatch);
 
                 var mouseState = Mouse.GetState();
                 var transformMatrix = _camera.GetViewMatrix();
                 _spriteBatch.Begin(transformMatrix: transformMatrix);
-                _spriteBatch.DrawRectangle(new RectangleF(mouseState.X, mouseState.Y, 50, 50), Color.Black, 1f);
+                _spriteBatch.DrawRectangle(new RectangleF(mouseState.X - 3, mouseState.Y -3, 50, 50), Color.Black, 1f);
                 _spriteBatch.End();
             }
 
@@ -146,17 +150,7 @@ namespace NNGame
         {
             var movementDirection = Vector2.Zero;
             var state = Keyboard.GetState();
-
-            if (movementDirection.X < 0 )
-            {
-                movementDirection.X = 0;
-            }
-
-            if (movementDirection.Y < 0)
-            {
-                movementDirection.Y = 0;
-            }
-
+       
             if (state.IsKeyDown(Keys.W))
             {
                 movementDirection -= Vector2.UnitY;    
@@ -174,11 +168,20 @@ namespace NNGame
                 movementDirection += Vector2.UnitX;
             }
 
+            if (movementDirection.X <= 0)
+            {
+                movementDirection.X = 0;
+            }
+            if (movementDirection.Y <= 0)
+            {
+                movementDirection.Y = 0;
+            }
+
             // Can't normalize the zero vector so test for it before normalizing
             if (movementDirection != Vector2.Zero)
             {
                 movementDirection.Normalize();
-            }
+            }         
          
             return movementDirection;
         }
