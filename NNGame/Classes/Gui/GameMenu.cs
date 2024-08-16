@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MonoGame.Extended;
-using GeonBit.UI;
+﻿using GeonBit.UI;
 using GeonBit.UI.Entities;
-using System.Reflection.Metadata;
 using Microsoft.Xna.Framework;
 
 namespace NNGame.Classes.Gui
 {
+    /// <summary>
+    /// ingame GUI Menu
+    /// </summary>
     public class GameMenu
     {
         private readonly Main main;

@@ -3,12 +3,12 @@
 namespace NNGame
 {
     /// <summary>
-    /// The main class.
+    /// Entry thread
     /// </summary>
     public static class Program
     {
         /// <summary>
-        /// The main entry point for the application.
+        /// The main thread entry point.
         /// </summary>
         [STAThread]
         static void Main()
