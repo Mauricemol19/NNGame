@@ -7,7 +7,7 @@ using MonoGame.Extended.Tiled;
 namespace NNGame.Classes.Cameras
 {
     /// <summary>
-    /// Parent Camera class
+    /// Parent Camera container
     /// </summary>
     public class Camera
     {
@@ -24,7 +24,9 @@ namespace NNGame.Classes.Cameras
 
         public void Move(Vector2 mvd, float seconds)
         {
-            _camera.Move(mvd * _movementSpeed * seconds);
+            //mvd.SetX(mvd * _movementSpeed);
+           
+            _camera.Move(mvd);
         }
 
         public Matrix GetViewMatrix()
@@ -34,6 +36,7 @@ namespace NNGame.Classes.Cameras
 
         public Vector2 GetWXY(MouseState mouseState, Vector2 worldPos)
         {
+            /*
             float relativeMouseX = mouseState.X + _camera.Position.X;
             float relativeMouseY = mouseState.Y + _camera.Position.Y;
 
@@ -41,10 +44,13 @@ namespace NNGame.Classes.Cameras
             float rmy = worldPos.Y = relativeMouseY / 32;           
    
             return new Vector2((int)rmx, (int)rmy);
+            */
+
+            return _camera.ScreenToWorld(mouseState.X, mouseState.Y);                        
         }
 
         public Vector2 GetWorldPos(MouseState mouseState)
-        {
+        {            
             float relativeMouseX = mouseState.X + _camera.Position.X;
             float relativeMouseY = mouseState.Y + _camera.Position.Y;
 

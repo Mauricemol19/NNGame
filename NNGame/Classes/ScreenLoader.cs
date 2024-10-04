@@ -6,13 +6,13 @@ using NNGame.Classes.Screens;
 
 namespace NNGame.Classes
 {
-    internal class ScreenLoader
+    public class ScreenLoader
     {
         public string current_screen { get; set; }
 
         private readonly Main Main;
-        private readonly ScreenManager ScreenManager;
-        private readonly GraphicsDevice GraphicsDevice;
+        private ScreenManager ScreenManager;
+        private GraphicsDevice GraphicsDevice;
 
         public ScreenLoader(Main _main, ScreenManager _screenManager, GraphicsDevice _graphicsDevice)
         {
@@ -34,8 +34,7 @@ namespace NNGame.Classes
 
         public void LoadWorldMap()
         {
-            ScreenManager.LoadScreen(new WorldMap(Main), new FadeTransition(GraphicsDevice, Color.Black));
-            current_screen = "WorldMap";
+            ScreenManager.LoadScreen(new WorldMap(Main), new FadeTransition(GraphicsDevice, Color.Black));           
         }
     }
 }

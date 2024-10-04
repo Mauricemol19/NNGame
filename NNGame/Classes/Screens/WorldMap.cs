@@ -2,8 +2,8 @@
 using Microsoft.Xna.Framework;
 using MonoGame.Extended.Screens;
 using MonoGame.Extended;
-using MonoGame.Extended.Tiled.Renderers;
 using MonoGame.Extended.Tiled;
+using MonoGame.Extended.Tiled.Renderers;
 
 namespace NNGame.Classes.Screens
 {
@@ -20,7 +20,7 @@ namespace NNGame.Classes.Screens
 
         public override void LoadContent()
         {
-            main._tiledMap = main.Content.Load<TiledMap>("Tilemaps/Grass");
+            main._tiledMap = main.Content.Load<TiledMap>("TileMaps/Grass");
             main._tiledMapRenderer = new TiledMapRenderer(GraphicsDevice, main._tiledMap);
             main._spriteBatch = new SpriteBatch(GraphicsDevice);
             main._current_screen = name;

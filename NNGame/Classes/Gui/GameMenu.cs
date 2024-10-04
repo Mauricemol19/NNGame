@@ -15,7 +15,7 @@ namespace NNGame.Classes.Gui
 
         public GameMenu()
         {            
-            panel1 = new Panel(size: new Vector2(230, 75), skin: PanelSkin.Fancy, anchor: Anchor.TopLeft);
+            panel1 = new Panel(size: new Vector2(500, 80), skin: PanelSkin.Fancy, anchor: Anchor.TopLeft);
 
             UserInterface.Active.AddEntity(panel1);           
 

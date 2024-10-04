@@ -1,9 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGame.Extended;
 using MonoGame.Extended.Tiled;
 using MonoGame.Extended.Tiled.Renderers;
-using MonoGame.Extended;
 using MonoGame.Extended.ViewportAdapters;
 using MonoGame.Extended.Screens;
 using NNGame.Classes;
@@ -41,11 +41,16 @@ namespace NNGame
 
         private ScreenLoader _screenLoader;
 
+        public TiledMapTile _selectedTile;
+        public TiledMapTile _playerLocation;
+
         public string _current_screen = "Menu";
 
         public GameMenu _gameMenu;
 
         public Character _playerChar;
+
+        private bool wDown, aDown, sDown, dDown = false;
 
         public Main()
         {
@@ -98,16 +103,38 @@ namespace NNGame
         /// </summary>
         protected override void LoadContent()
         {
-            _spriteBatch = new SpriteBatch(GraphicsDevice);
-
+            //Load the spritebatch
             try
             {
+                _spriteBatch = new SpriteBatch(GraphicsDevice);
+            }
+            catch
+            {
+                Debug.WriteLine("LoadContent(): Unable to Load spritebatch", "Error");
+            }
+
+            //Load spritefont
+            try
+            {               
                 _tileTextFont = this.Content.Load<SpriteFont>("Fonts/font");               
             }
             catch 
             {
-                Debug.WriteLine("Unable to Load content");
+                Debug.WriteLine("LoadContent(): Unable to Load spritefont", "Error");
             }
+
+            _playerChar = new("Sprites/test", Vector2.Zero);       
+
+            //Load player sprite
+            try
+            {
+                _playerChar._spriteTexture = this.Content.Load<Texture2D>(_playerChar.SpriteName);
+            }
+            catch
+            {
+                Debug.WriteLine("Unable to load character sprite");
+                Exit();
+            }            
 
             _tileText = "";
             _tileTextPosition = new Vector2(10, 70);
@@ -119,50 +146,41 @@ namespace NNGame
         /// <param name="gameTime"></param>
         protected override void Draw(GameTime gameTime)
         {
-            //Todo: change init of function and sorting
+            //Todo: change init of function and sorting           
             if (_current_screen != "Menu" && _tiledMapRenderer != null)
-            {              
-                //Clear GraphicsDevice
+            {
+                //Clear GraphicsDevice 
                 GraphicsDevice.Clear(Color.CornflowerBlue);
-                GraphicsDevice.Clear(Color.Black);
+                GraphicsDevice.Clear(Color.Black);                
 
                 //Draw tiledmap
                 _tiledMapRenderer.Draw(_camera.GetViewMatrix());
 
                 //Draw GUI
                 UserInterface.Active.Draw(_spriteBatch);                                           
-
-                //Get world position X and Y of tile where mouse is
-                Vector2 wp_xy = _camera.GetWXY(Mouse.GetState(), _worldPosition);            
-
-                UpdateTileText((int)wp_xy.X, (int)wp_xy.Y);            
-
-                //Begin sprite drawing
+                        
                 _spriteBatch.Begin();
 
                 //Draw player character
                 if (_playerChar != null)
-                {
-                    _spriteBatch.Draw(_playerChar._spriteTexture, _playerChar._spritePosition, Color.White);
-                }
+                    _spriteBatch.Draw(_playerChar._spriteTexture, _playerChar.SpritePosition, Color.White);
 
-                //Draw debug ui
-                _spriteBatch.DrawString(_tileTextFont, _tileText, _tileTextPosition, Color.Yellow, 0.0f, Vector2.Zero, 1.0f, SpriteEffects.None, 0.0f);
-                _spriteBatch.DrawString(_tileTextFont, "X:" + ((int)wp_xy.X).ToString() + " : Y:" + ((int)wp_xy.Y).ToString(), new Vector2(10, 100), Color.Orange, 0.0f, Vector2.Zero, 1.0f, SpriteEffects.None, 0.0f);
+                //Draw debug playerlocation
+                if (_playerChar != null)
+                    _spriteBatch.DrawString(_tileTextFont, "X: " + _playerChar.SpritePosition.X + " Y:" + _playerChar.SpritePosition.Y, _tileTextPosition, Color.Yellow, 0.0f, Vector2.Zero, 1.0f, SpriteEffects.None, 0.0f);                
 
-                //End sprite drawing
                 _spriteBatch.End();               
 
                 base.Draw(gameTime);
             }
             else
             {
-                //Draw Menu
+                //Draw Main Menu
             }
         }       
 
         /// <summary>
-        /// Update Logic
+        /// Update Logic every tick
         /// </summary>
         /// <param name="gameTime"></param>
         protected override void Update(GameTime gameTime)
@@ -171,33 +189,29 @@ namespace NNGame
                 Exit();        
 
             if (_current_screen != "Menu" && _camera != null)
-            {              
-                //PlayerCam
-                if (_playerChar == null)
-                {
-                    //*DEBUG*//
-                    //_playerChar = new("Character", Vector2.Zero);
-                    _playerChar = new("Sprites/test", Vector2.Zero);
-                    //*DEBUG*//
-
-                    //Load player sprite
-                    try
-                    {                        
-                        _playerChar._spriteTexture = this.Content.Load<Texture2D>(_playerChar._spriteName);                        
-                    }
-                    catch 
-                    {
-                        Debug.WriteLine("Unable to load character sprite");
-                    }                   
-                }          
-
+            {                                 
                 Vector2 movementDirection = GetMovementDirection();
 
                 _camera.Move(movementDirection, gameTime.GetElapsedSeconds());
 
-                var viewport = _graphics.GraphicsDevice.Viewport;
+                MouseState ms = Mouse.GetState();
+                Vector2 wp_xy = _camera.GetWXY(ms, _worldPosition);
 
-                _playerChar._spritePosition = new Vector2(viewport.Width / 2 - 12, viewport.Height / 2 - 12);
+                //Debug Draw sprite near mouse
+                if (wp_xy.X >= 0 && wp_xy.Y >= 0 && wp_xy.X <= _tiledMap.WidthInPixels && wp_xy.Y <= _tiledMap.HeightInPixels)
+                {
+                    UpdateTileText((int)wp_xy.X, (int)wp_xy.Y);
+
+                    GetTileXYAtPoint((int)wp_xy.X, (int)wp_xy.Y, out int tileX, out int tileY);
+
+                    TiledMapTile tile = _tiledMap.TileLayers[0].GetTile((ushort)tileX, (ushort)tileY);
+
+                    _selectedTile = tile;
+
+                    //Move player near mouse
+                    if (_playerChar != null)
+                        _playerChar.SpritePosition = new Vector2(wp_xy.X, wp_xy.Y);
+                }
             } 
             else 
             {
@@ -213,7 +227,7 @@ namespace NNGame
         /// TODO: Keybindings
         /// </summary>
         /// <returns></returns>
-        private static Vector2 GetMovementDirection()
+        private Vector2 GetMovementDirection()
         {
             var movementDirection = Vector2.Zero;
             var state = Keyboard.GetState();
@@ -242,12 +256,69 @@ namespace NNGame
             }
 
             return movementDirection;
+
+            /*
+            if (state.IsKeyDown(Keys.W))
+            {
+                if (!wDown)
+                {
+                    movementDirection -= Vector2.UnitY;
+
+                    wDown = true;
+                }                
+            }
+            if (state.IsKeyUp(Keys.W))
+            {
+                wDown = false;
+            }            
+
+            if (state.IsKeyDown(Keys.A))
+            {
+                if (!aDown)
+                {
+                    movementDirection -= Vector2.UnitX;
+
+                    aDown = true;
+                }
+            }
+            if (state.IsKeyUp(Keys.A))
+            {
+                aDown = false;
+            }
+
+            if (state.IsKeyDown(Keys.S))
+            {
+                if (!sDown)
+                {
+                    movementDirection += Vector2.UnitY;
+
+                    sDown = true;
+                }
+            }
+            if (state.IsKeyUp(Keys.S))
+            {
+                sDown = false;
+            }
+
+            if (state.IsKeyDown(Keys.D))
+            {
+                if (!dDown)
+                {
+                    movementDirection += Vector2.UnitX;
+
+                    dDown = true;
+                }
+            }
+            if (state.IsKeyUp(Keys.D))
+            {
+                dDown = false;
+            }
+            */
         }
 
         //*****//
         //Debug//
-        //*****//
-     
+        //*****//    
         private void UpdateTileText(int x, int y)
         {
             if (ContainsXY(x, y))
@@ -256,11 +327,13 @@ namespace NNGame
 
                 var tile = _tiledMap.TileLayers[0].GetTile((ushort)tileX, (ushort)tileY);
 
-                _tileText = $"{tileX}, {tileY} TileType: [{GetTileText(_tiledMap, tile.GlobalIdentifier)}]";
+                //Show debug hovered over tile
+                //_tileText = $"In tilesheet: {tileX}, {tileY} TileType: [{GetTileText(_tiledMap, tile.GlobalIdentifier)}]";
 
+                //Update ingame UI with on tilesheet x and y
                 var p = _gameMenu.panel1.Children[0] as Paragraph;
                 {
-                    p.Text = "x:" + x + "\n" + "y:" + y + "\n" + "Tile: ";
+                    p.Text = "x:" + tileX + " y:" + tileY + "\n" + "TileType: [" + GetTileText(_tiledMap, tile.GlobalIdentifier) + "]";
                 }
             }
         }
