@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using MonoGame.Extended;
 using MonoGame.Extended.Tiled;
 using MonoGame.Extended.Tiled.Renderers;
 using MonoGame.Extended.ViewportAdapters;
@@ -14,6 +13,7 @@ using Vector2 = Microsoft.Xna.Framework.Vector2;
 using NNGame.Classes.Cameras;
 using NNGame.Classes.Characters;
 using System.Diagnostics;
+using MonoGame.Extended;
 
 namespace NNGame
 {
@@ -50,7 +50,7 @@ namespace NNGame
 
         public Character _playerChar;
 
-        private bool wDown, aDown, sDown, dDown = false;
+        //private bool wDown, aDown, sDown, dDown = false;
 
         public Main()
         {
@@ -67,26 +67,18 @@ namespace NNGame
         /// </summary>
         protected override void Initialize()
         {
-            //TODO: adjust scaling/fullscreen etc.  
             var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 640, 360);
 
-            //_graphics.PreferredBackBufferWidth = viewportadapter.GraphicsDevice.Adapter.CurrentDisplayMode.Width;           
-            //_graphics.PreferredBackBufferHeight = viewportadapter.GraphicsDevice.Adapter.CurrentDisplayMode.Height;
-            //_graphics.PreferredBackBufferWidth = 1920;
-            //_graphics.PreferredBackBufferHeight = 1080;
+            _graphics.ToggleFullScreen();
+            Window.IsBorderless = true;
 
-            //TODO: Borderless
-            //_graphics.ToggleFullScreen();
-
-            //Window.IsBorderless = true;
             Window.AllowUserResizing = true;            
 
-            //TODO: Neccessary?
+            //Soft mode
             _graphics.HardwareModeSwitch = false;
             
-            //TODO: Multiple different custom cams (player, free, cutscene etc.)
             _camera = new PlayerCamera(viewportadapter);
-         
+                  
             _screenLoader = new ScreenLoader(this, _screenManager, GraphicsDevice);
 
             //init GUI
@@ -111,6 +103,7 @@ namespace NNGame
             catch
             {
                 Debug.WriteLine("LoadContent(): Unable to Load spritebatch", "Error");
+                Exit();
             }
 
             //Load spritefont
@@ -121,6 +114,7 @@ namespace NNGame
             catch 
             {
                 Debug.WriteLine("LoadContent(): Unable to Load spritefont", "Error");
+                Exit();
             }
 
             _playerChar = new("Sprites/test", Vector2.Zero);       
@@ -137,37 +131,43 @@ namespace NNGame
             }            
 
             _tileText = "";
-            _tileTextPosition = new Vector2(10, 70);
+            _tileTextPosition = new Vector2(-5, -80);
         }
 
         /// <summary>
-        /// Drawing Logic
+        /// Draw every tick
         /// </summary>
         /// <param name="gameTime"></param>
         protected override void Draw(GameTime gameTime)
         {
-            //Todo: change init of function and sorting           
             if (_current_screen != "Menu" && _tiledMapRenderer != null)
             {
                 //Clear GraphicsDevice 
                 GraphicsDevice.Clear(Color.CornflowerBlue);
-                GraphicsDevice.Clear(Color.Black);                
+                GraphicsDevice.Clear(Color.Black);
+
+                var viewMatrix = _camera.GetViewMatrix();
+                var transformMatrix = viewMatrix;
 
                 //Draw tiledmap
-                _tiledMapRenderer.Draw(_camera.GetViewMatrix());
+                _tiledMapRenderer.Draw(viewMatrix);
+
+                //_tiledMapRenderer.Draw(_tiledMap.GetLayer("Floor"), _camera.GetViewMatrix());
+                //_tiledMapRenderer.Draw(_tiledMap.GetLayer("Objects"), _camera.GetViewMatrix());
 
                 //Draw GUI
-                UserInterface.Active.Draw(_spriteBatch);                                           
-                        
-                _spriteBatch.Begin();
+                UserInterface.Active.Draw(_spriteBatch);    
+                                        
+                //Open spritebatch with ref to transformMatrix for scaling
+                _spriteBatch.Begin(transformMatrix: transformMatrix);
 
                 //Draw player character
                 if (_playerChar != null)
-                    _spriteBatch.Draw(_playerChar._spriteTexture, _playerChar.SpritePosition, Color.White);
+                    _spriteBatch.Draw(_playerChar._spriteTexture, _playerChar.SpritePosition, null, Color.White, 0.0f, Vector2.Zero, 0.08f, SpriteEffects.None, 1);
 
                 //Draw debug playerlocation
                 if (_playerChar != null)
-                    _spriteBatch.DrawString(_tileTextFont, "X: " + _playerChar.SpritePosition.X + " Y:" + _playerChar.SpritePosition.Y, _tileTextPosition, Color.Yellow, 0.0f, Vector2.Zero, 1.0f, SpriteEffects.None, 0.0f);                
+                    _spriteBatch.DrawString(_tileTextFont, _tileText, _tileTextPosition, Color.Blue, 0.0f, Vector2.Zero, 1.0f, SpriteEffects.None, 0.0f);
 
                 _spriteBatch.End();               
 
@@ -189,30 +189,34 @@ namespace NNGame
                 Exit();        
 
             if (_current_screen != "Menu" && _camera != null)
-            {                                 
-                Vector2 movementDirection = GetMovementDirection();
-
-                _camera.Move(movementDirection, gameTime.GetElapsedSeconds());
-
+            {                     
                 MouseState ms = Mouse.GetState();
-                Vector2 wp_xy = _camera.GetWXY(ms, _worldPosition);
+                Vector2 wp_xy = _camera.GetWXY(ms, _worldPosition);                
+      
+                Vector2 movementDirection = GetMovementDirection();           
 
-                //Debug Draw sprite near mouse
+                //Set player spriteposition and lock camera to player
+                if (_playerChar != null)
+                {
+                    _playerChar.SpritePosition += movementDirection;
+
+                    //TODO: change to dynamic offset of sprite
+                    _camera.Move(_playerChar.SpritePosition - new Vector2(-20, -40));           
+                }
+
+                //**DEBUG**//
                 if (wp_xy.X >= 0 && wp_xy.Y >= 0 && wp_xy.X <= _tiledMap.WidthInPixels && wp_xy.Y <= _tiledMap.HeightInPixels)
                 {
-                    UpdateTileText((int)wp_xy.X, (int)wp_xy.Y);
+                    UpdateTileText((int)wp_xy.X, (int)wp_xy.Y, ms);
 
-                    GetTileXYAtPoint((int)wp_xy.X, (int)wp_xy.Y, out int tileX, out int tileY);
+                    _camera.GetTileXYAtPoint((int)wp_xy.X, (int)wp_xy.Y, out int tileX, out int tileY);
 
                     TiledMapTile tile = _tiledMap.TileLayers[0].GetTile((ushort)tileX, (ushort)tileY);
 
                     _selectedTile = tile;
-
-                    //Move player near mouse
-                    if (_playerChar != null)
-                        _playerChar.SpritePosition = new Vector2(wp_xy.X, wp_xy.Y);
                 }
-            } 
+                //**DEBUG**//
+            }
             else 
             {
                 //TODO: MainMenu Camera
@@ -224,11 +228,11 @@ namespace NNGame
 
         /// <summary>
         /// Gets Vector2 of movement direction based on user input
-        /// TODO: Keybindings
         /// </summary>
         /// <returns></returns>
-        private Vector2 GetMovementDirection()
+        private static Vector2 GetMovementDirection()
         {
+            //Handle inputs
             var movementDirection = Vector2.Zero;
             var state = Keyboard.GetState();
 
@@ -249,7 +253,7 @@ namespace NNGame
                 movementDirection += Vector2.UnitX;
             }
 
-            //Can't normalize zero vector
+            //Zero vector is not normalizable
             if (movementDirection != Vector2.Zero)
             {
                 movementDirection.Normalize();
@@ -316,25 +320,24 @@ namespace NNGame
             */
         }
 
-        //*****//
-        //Debug//
-        //*****//    
-        private void UpdateTileText(int x, int y)
+        private void UpdateTileText(int x, int y, MouseState ms)
         {
             if (ContainsXY(x, y))
             {
-                GetTileXYAtPoint(x, y, out int tileX, out int tileY);
+                //**DEBUG**//
+                _camera.GetTileXYAtPoint(x, y, out int tileX, out int tileY);
 
                 var tile = _tiledMap.TileLayers[0].GetTile((ushort)tileX, (ushort)tileY);
 
-                //Show debug hovered over tile
-                //_tileText = $"In tilesheet: {tileX}, {tileY} TileType: [{GetTileText(_tiledMap, tile.GlobalIdentifier)}]";
+                Vector2 wp_xy = new(ms.X, ms.Y);
 
-                //Update ingame UI with on tilesheet x and y
                 var p = _gameMenu.panel1.Children[0] as Paragraph;
                 {
-                    p.Text = "x:" + tileX + " y:" + tileY + "\n" + "TileType: [" + GetTileText(_tiledMap, tile.GlobalIdentifier) + "]";
+                    p.Text = $"x:{tileX} y:{tileY} TileType: [" + _camera.GetTileText(_tiledMap, tile.GlobalIdentifier) + "]\n";
+                    p.Text += $"Player pos: x:{_playerChar.SpritePosition.X} , y:{_playerChar.SpritePosition.Y}\n";
+                    p.Text += $"Mouse pos in screen: x:{wp_xy.X} y:{wp_xy.Y}";
                 }
+                //**DEBUG**//
             }
         }
 
@@ -345,24 +348,5 @@ namespace NNGame
 
             return (tileX >= 0) && (tileX < _tiledMap.Width) && (tileY >= 0) && (tileY < _tiledMap.Height);
         }
-
-        private void GetTileXYAtPoint(int x, int y, out int tileX, out int tileY)
-        {
-            tileX = x / 32;
-            tileY = y / 32;
-        }
-
-        private string GetTileText(TiledMap map, int id)
-        {
-            foreach (var tileSet in map.Tilesets)
-            {
-                int firstGid = map.GetTilesetFirstGlobalIdentifier(tileSet);
-
-                if ((id >= firstGid) && (id < firstGid + tileSet.TileCount))
-                    return $"{tileSet.Name}: {id - firstGid}";
-            }
-
-            return "Unknown";
-        }        
     }
 }

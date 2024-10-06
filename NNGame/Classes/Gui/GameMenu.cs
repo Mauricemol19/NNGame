@@ -14,14 +14,14 @@ namespace NNGame.Classes.Gui
         public Panel panel1;
 
         public GameMenu()
-        {            
-            panel1 = new Panel(size: new Vector2(500, 80), skin: PanelSkin.Fancy, anchor: Anchor.TopLeft);
+        {
+            panel1 = new Panel(size: new Vector2(800, 100), skin: PanelSkin.Fancy, anchor: Anchor.TopLeft);            
 
             UserInterface.Active.AddEntity(panel1);           
 
-            panel1.AddChild(new Paragraph("x:0\ny:0\nTile:", Anchor.CenterLeft, offset: new Vector2(0, 0)), false);
+            panel1.AddChild(new Paragraph("x:0\ny:0\nTile:", Anchor.CenterLeft, offset: Vector2.Zero), false);
 
-            UserInterface.Active.ShowCursor = false;
+            UserInterface.Active.ShowCursor = false;          
         }
     }
 }

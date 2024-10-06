@@ -7,7 +7,7 @@ namespace NNGame.Classes.Cameras
     /// </summary>
     public class PlayerCamera : Camera
     {
-        public float moveSpeed = .5f;       
+        public float moveSpeed = 60f;       
 
         public PlayerCamera(BoxingViewportAdapter viewportadapter)  : base(viewportadapter)
         {

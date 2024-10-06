@@ -11,7 +11,7 @@ namespace NNGame.Classes.Cameras
     /// </summary>
     public class Camera
     {
-        private readonly OrthographicCamera _camera;
+        public OrthographicCamera _camera;
 
         public float _movementSpeed { get; set; }
 
@@ -22,11 +22,14 @@ namespace NNGame.Classes.Cameras
             _camera = new OrthographicCamera(bva);
         }
 
-        public void Move(Vector2 mvd, float seconds)
+        public void Move(Vector2 position)
         {
-            //mvd.SetX(mvd * _movementSpeed);
-           
-            _camera.Move(mvd);
+            _camera.LookAt(position);
+        }
+
+        public void Move(Vector2 mvd, Vector2 direction, float seconds)
+        {
+            _camera.Move(mvd * _movementSpeed * seconds);
         }
 
         public Matrix GetViewMatrix()
@@ -47,6 +50,25 @@ namespace NNGame.Classes.Cameras
             */
 
             return _camera.ScreenToWorld(mouseState.X, mouseState.Y);                        
+        }    
+      
+        public void GetTileXYAtPoint(int x, int y, out int tileX, out int tileY)
+        {
+            tileX = x / 32;
+            tileY = y / 32;
+        }
+
+        public string GetTileText(TiledMap map, int id)
+        {
+            foreach (var tileSet in map.Tilesets)
+            {
+                int firstGid = map.GetTilesetFirstGlobalIdentifier(tileSet);
+
+                if ((id >= firstGid) && (id < firstGid + tileSet.TileCount))
+                    return $"{tileSet.Name}: {id - firstGid}";
+            }
+
+            return "Unknown";
         }
 
         public Vector2 GetWorldPos(MouseState mouseState)
