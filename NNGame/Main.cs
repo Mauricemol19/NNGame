@@ -69,14 +69,19 @@ namespace NNGame
         {
             var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 640, 360);
 
+            Window.AllowUserResizing = true;
+
+            _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
+            _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
+
             _graphics.ToggleFullScreen();
-            Window.IsBorderless = true;
-
-            Window.AllowUserResizing = true;            
-
+            //Window.IsBorderless = true;
+            
             //Soft mode
             _graphics.HardwareModeSwitch = false;
-            
+
+            _graphics.ApplyChanges();
+
             _camera = new PlayerCamera(viewportadapter);
                   
             _screenLoader = new ScreenLoader(this, _screenManager, GraphicsDevice);
@@ -117,7 +122,7 @@ namespace NNGame
                 Exit();
             }
 
-            _playerChar = new("Sprites/test", Vector2.Zero);       
+            _playerChar = new("Sprites/test", new Vector2(400, 200));       
 
             //Load player sprite
             try
@@ -151,12 +156,11 @@ namespace NNGame
 
                 //Draw tiledmap
                 _tiledMapRenderer.Draw(viewMatrix);
-
                 //_tiledMapRenderer.Draw(_tiledMap.GetLayer("Floor"), _camera.GetViewMatrix());
                 //_tiledMapRenderer.Draw(_tiledMap.GetLayer("Objects"), _camera.GetViewMatrix());
 
                 //Draw GUI
-                UserInterface.Active.Draw(_spriteBatch);    
+                UserInterface.Active.Draw(_spriteBatch);                                 
                                         
                 //Open spritebatch with ref to transformMatrix for scaling
                 _spriteBatch.Begin(transformMatrix: transformMatrix);
@@ -167,7 +171,7 @@ namespace NNGame
 
                 //Draw debug playerlocation
                 if (_playerChar != null)
-                    _spriteBatch.DrawString(_tileTextFont, _tileText, _tileTextPosition, Color.Blue, 0.0f, Vector2.Zero, 1.0f, SpriteEffects.None, 0.0f);
+                    //_spriteBatch.DrawString(_tileTextFont, _tileText, _tileTextPosition, Color.Blue, 0.0f, Vector2.Zero, 1.0f, SpriteEffects.None, 0.0f);
 
                 _spriteBatch.End();               
 
@@ -333,8 +337,8 @@ namespace NNGame
 
                 var p = _gameMenu.panel1.Children[0] as Paragraph;
                 {
-                    p.Text = $"x:{tileX} y:{tileY} TileType: [" + _camera.GetTileText(_tiledMap, tile.GlobalIdentifier) + "]\n";
-                    p.Text += $"Player pos: x:{_playerChar.SpritePosition.X} , y:{_playerChar.SpritePosition.Y}\n";
+                    p.Text = $"Player pos: x:{_playerChar.SpritePosition.X} , y:{_playerChar.SpritePosition.Y}\n";
+                    p.Text += $"Mouse tile hoverx:{tileX} y:{tileY} TileType: [" + _camera.GetTileText(_tiledMap, tile.GlobalIdentifier) + "]\n";
                     p.Text += $"Mouse pos in screen: x:{wp_xy.X} y:{wp_xy.Y}";
                 }
                 //**DEBUG**//
