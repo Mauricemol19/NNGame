@@ -10,12 +10,11 @@ namespace NNGame.Classes
     {
         public bool IsSteamRunning { get; set; } = false;
 
-        public SpriteFont Font { get; private set; }
         public int ScreenWidth { get; private set; }
         public int ScreenHeight { get; private set; }
         public string STEAM_NOT_RUNNING_ERROR_MESSAGE = "Please start your steam client to receive data!";
 
-        // Collectible data.
+        // Collectible data
         public string SteamUserName { get; set; } = "";
         public string CurrentLanguage { get; set; } = "";
         public string AvailableLanguages { get; set; } = "";
@@ -41,8 +40,7 @@ namespace NNGame.Classes
                 }
             }
             catch (DllNotFoundException e)
-            {
-                // We check this here as it will be the first instance of it.
+            {                
                 Debug.WriteLine("[Steamworks.NET] Could not load [lib]steam_api.dll/so/dylib." +
                                       " It's likely not in the correct location.\n" +
                                       e);
@@ -50,10 +48,10 @@ namespace NNGame.Classes
             }
 
             SteamUtils.SetOverlayNotificationPosition(ENotificationPosition.k_EPositionTopRight);
-            // Uncomment the next line to adjust the OverlayNotificationPosition.
-            //SteamUtils.SetOverlayNotificationInset(400, 0);
+            //Uncomment the next line to adjust the OverlayNotificationPosition.
+            SteamUtils.SetOverlayNotificationInset(400, 0);
 
-            // Set collectable data.
+            //Set collectable data
             CurrentLanguage = $"CurrentGameLanguage: {SteamApps.GetCurrentGameLanguage()}";
             AvailableLanguages = $"Languages: {SteamApps.GetAvailableGameLanguages()}";
             UserStats = $"Reqesting Current Stats - {SteamUserStats.RequestCurrentStats()}";
@@ -81,7 +79,7 @@ namespace NNGame.Classes
         {
             SteamAPI.Shutdown();
             UserAvatar?.Dispose();
-        }
+        }        
 
         /// <summary>
         ///     Get your steam avatar.
@@ -154,15 +152,16 @@ namespace NNGame.Classes
         private static CallResult<LeaderboardFindResult_t> mCallResultFindLeaderboard;
         private static Callback<PersonaStateChange_t> mPersonaStateChange;
         private static Callback<UserStatsReceived_t> mUserStatsReceived;
+        private static Callback<SteamShutdown_t> mSteamShutdown_t;
 
         /// <summary>
         ///     Initialize some Steam Callbacks.
         /// </summary>
-        private void InitializeCallbacks()
+        public void InitializeCallbacks()
         {
             mGameOverlayActivated = Callback<GameOverlayActivated_t>.Create(OnGameOverlayActivated);
-            mNumberOfCurrentPlayers = CallResult<NumberOfCurrentPlayers_t>.Create(OnNumberOfCurrentPlayers);
-            mCallResultFindLeaderboard = CallResult<LeaderboardFindResult_t>.Create(OnFindLeaderboard);
+            //mNumberOfCurrentPlayers = CallResult<NumberOfCurrentPlayers_t>.Create(OnNumberOfCurrentPlayers);
+            //mCallResultFindLeaderboard = CallResult<LeaderboardFindResult_t>.Create(OnFindLeaderboard);
             mPersonaStateChange = Callback<PersonaStateChange_t>.Create(OnPersonaStateChange);
             mUserStatsReceived =
                 Callback<UserStatsReceived_t>.Create(
@@ -171,6 +170,12 @@ namespace NNGame.Classes
                         UserStats =
                             $"[{UserStatsReceived_t.k_iCallback} - UserStatsReceived] - {pCallback.m_eResult} -- {pCallback.m_nGameID} -- {pCallback.m_steamIDUser}";
                     });
+            mSteamShutdown_t = Callback<SteamShutdown_t>.Create(OnSteamShutdown);
+        }
+
+        private void OnSteamShutdown(SteamShutdown_t pCallBack)
+        {
+
         }
 
         private void OnGameOverlayActivated(GameOverlayActivated_t pCallback)

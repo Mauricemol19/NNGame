@@ -71,20 +71,21 @@ namespace NNGame
         /// </summary>
         protected override void Initialize()
         {
-            var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 640, 360);
+            //var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 960, 550);
+            var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 1080, 670);
 
             Window.AllowUserResizing = true;
 
             _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
             _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
 
-            _graphics.ToggleFullScreen();
+            //_graphics.ToggleFullScreen();
             //Window.IsBorderless = true;
             
             //Soft mode
             _graphics.HardwareModeSwitch = false;
 
-            _graphics.ApplyChanges();
+            _graphics.ApplyChanges();            
 
             //Steamworks
             _steamworksManager = new SteamworksManager();
@@ -96,10 +97,8 @@ namespace NNGame
             }
             else
             {
-                //Steam is running
                 _steamworksManager.IsSteamRunning = true;
-
-                //It's important that the next call happens AFTER the call to SteamAPI.Init().
+                
                 _steamworksManager.Initialize(this);
             }            
 
@@ -113,11 +112,13 @@ namespace NNGame
             //init Main Menu
             _gameMenu = new GameMenu();
 
+            IsFixedTimeStep = true;
+
             base.Initialize();
         }
 
         /// <summary>
-        /// Load Content at startup
+        /// Used to load Content at startup into memory
         /// </summary>
         protected override void LoadContent()
         {
@@ -154,7 +155,9 @@ namespace NNGame
             {
                 Debug.WriteLine("Unable to load character sprite");
                 Exit();
-            }            
+            }      
+
+            _steamworksManager.InitializeCallbacks();
 
             _tileText = "";
             _tileTextPosition = new Vector2(-5, -80);
@@ -209,12 +212,12 @@ namespace NNGame
                             Color.Yellow);
                     }
 
-                    // Draw data up/left.
+                    // Draw data up/left
                     _spriteBatch.DrawString(_tileTextFont,
                         $"{_steamworksManager.CurrentLanguage}\n{_steamworksManager.AvailableLanguages}\n{_steamworksManager.InstallDir}\n\nOverlay Active: {_steamworksManager.SteamOverlayActive}\nApp PlayTime: {_steamworksManager.PlayTimeInSeconds()}",
                         new Vector2(20, 20), Color.White);
 
-                    // Draw data down/left.
+                    // Draw data down/left
                     _spriteBatch.DrawString(_tileTextFont, $"{_steamworksManager.NumberOfCurrentPlayers}\n{_steamworksManager.PersonaState}\n{_steamworksManager.UserStats}\n{_steamworksManager.LeaderboardData}",
                         new Vector2(20, 375), Color.White);
                 }
@@ -254,7 +257,7 @@ namespace NNGame
                 //Set player spriteposition and lock camera to player
                 if (_playerChar != null)
                 {
-                    _playerChar.SpritePosition += movementDirection;
+                    _playerChar.SpritePosition += movementDirection * 4;
 
                     //TODO: change to dynamic offset of sprite
                     _camera.Move(_playerChar.SpritePosition - new Vector2(-20, -40));           
@@ -279,8 +282,8 @@ namespace NNGame
                 //_camera.Move(GetMovementDirection(), gameTime.GetElapsedSeconds());
             }
 
-            //if (_steamworksManager.IsSteamRunning) 
-                //SteamAPI.RunCallbacks();
+            if (_steamworksManager.IsSteamRunning) 
+                SteamAPI.RunCallbacks();
 
             base.Update(gameTime);
         }
@@ -393,7 +396,7 @@ namespace NNGame
                 var p = _gameMenu.panel1.Children[0] as Paragraph;
                 {
                     p.Text = $"Player pos: x:{_playerChar.SpritePosition.X} , y:{_playerChar.SpritePosition.Y}\n";
-                    p.Text += $"Mouse tile hoverx:{tileX} y:{tileY} TileType: [" + _camera.GetTileText(_tiledMap, tile.GlobalIdentifier) + "]\n";
+                    p.Text += $"Mouse tile hover: x:{tileX} y:{tileY} TileType: [" + _camera.GetTileText(_tiledMap, tile.GlobalIdentifier) + "]\n";
                     p.Text += $"Mouse pos in screen: x:{wp_xy.X} y:{wp_xy.Y}";
                 }
                 //**DEBUG**//
