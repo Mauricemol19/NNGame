@@ -14,6 +14,8 @@ using NNGame.Classes.Cameras;
 using NNGame.Classes.Characters;
 using System.Diagnostics;
 using MonoGame.Extended;
+using Steamworks;
+using System;
 
 namespace NNGame
 {
@@ -24,6 +26,8 @@ namespace NNGame
     {
         public GraphicsDeviceManager _graphics;
         public SpriteBatch _spriteBatch;
+
+        public SteamworksManager _steamworksManager;
 
         public TiledMap _tiledMap;
         public TiledMapRenderer _tiledMapRenderer;
@@ -59,7 +63,7 @@ namespace NNGame
             IsMouseVisible = true;                     
 
             _screenManager = new ScreenManager();
-            Components.Add(_screenManager);                          
+            Components.Add(_screenManager);           
         }
 
         /// <summary>
@@ -81,6 +85,23 @@ namespace NNGame
             _graphics.HardwareModeSwitch = false;
 
             _graphics.ApplyChanges();
+
+            //Steamworks
+            _steamworksManager = new SteamworksManager();
+
+            if (!SteamAPI.Init())
+            {
+                Console.WriteLine("SteamAPI.Init() failed!");
+                Exit();
+            }
+            else
+            {
+                //Steam is running
+                _steamworksManager.IsSteamRunning = true;
+
+                //It's important that the next call happens AFTER the call to SteamAPI.Init().
+                _steamworksManager.Initialize(this);
+            }            
 
             _camera = new PlayerCamera(viewportadapter);
                   
@@ -122,7 +143,7 @@ namespace NNGame
                 Exit();
             }
 
-            _playerChar = new("Sprites/test", new Vector2(400, 200));       
+            _playerChar = new("Sprites/test", new Vector2(400, 400));       
 
             //Load player sprite
             try
@@ -137,7 +158,7 @@ namespace NNGame
 
             _tileText = "";
             _tileTextPosition = new Vector2(-5, -80);
-        }
+        }       
 
         /// <summary>
         /// Draw every tick
@@ -172,6 +193,37 @@ namespace NNGame
                 //Draw debug playerlocation
                 if (_playerChar != null)
                     //_spriteBatch.DrawString(_tileTextFont, _tileText, _tileTextPosition, Color.Blue, 0.0f, Vector2.Zero, 1.0f, SpriteEffects.None, 0.0f);
+
+                if (_steamworksManager.IsSteamRunning)
+                {
+                    //Draw your Steam Avatar and Steam Name
+                    if (_steamworksManager.UserAvatar != null)
+                    {                                                        
+                        var avatarPosition = new Vector2(GraphicsDevice.Viewport.Width / 2f,
+                            GraphicsDevice.Viewport.Height / 2f + (!_steamworksManager.SteamOverlayActive ? _steamworksManager.MoveUpAndDown(gameTime, 2).Y * 25 : 0));
+                        _spriteBatch.Draw(_steamworksManager.UserAvatar, avatarPosition, null, Color.White, 0f,
+                            new Vector2(_steamworksManager.UserAvatar.Width / 2f, _steamworksManager.UserAvatar.Height / 2f), 1f, SpriteEffects.None, 0f);
+                        _spriteBatch.DrawString(_tileTextFont, _steamworksManager.SteamUserName,
+                            new Vector2(avatarPosition.X - _tileTextFont.MeasureString(_steamworksManager.SteamUserName).X / 2f,
+                                avatarPosition.Y - _steamworksManager.UserAvatar.Height / 2f - _tileTextFont.MeasureString(_steamworksManager.SteamUserName).Y * 1.5f),
+                            Color.Yellow);
+                    }
+
+                    // Draw data up/left.
+                    _spriteBatch.DrawString(_tileTextFont,
+                        $"{_steamworksManager.CurrentLanguage}\n{_steamworksManager.AvailableLanguages}\n{_steamworksManager.InstallDir}\n\nOverlay Active: {_steamworksManager.SteamOverlayActive}\nApp PlayTime: {_steamworksManager.PlayTimeInSeconds()}",
+                        new Vector2(20, 20), Color.White);
+
+                    // Draw data down/left.
+                    _spriteBatch.DrawString(_tileTextFont, $"{_steamworksManager.NumberOfCurrentPlayers}\n{_steamworksManager.PersonaState}\n{_steamworksManager.UserStats}\n{_steamworksManager.LeaderboardData}",
+                        new Vector2(20, 375), Color.White);
+                }
+                else
+                {
+                    _spriteBatch.DrawString(_tileTextFont, _steamworksManager.STEAM_NOT_RUNNING_ERROR_MESSAGE,
+                        new Vector2(GraphicsDevice.Viewport.Width / 2f - _tileTextFont.MeasureString(_steamworksManager.STEAM_NOT_RUNNING_ERROR_MESSAGE).X / 2f,
+                            GraphicsDevice.Viewport.Height / 2f - _tileTextFont.MeasureString(_steamworksManager.STEAM_NOT_RUNNING_ERROR_MESSAGE).Y / 2f), Color.White);
+                }
 
                 _spriteBatch.End();               
 
@@ -226,6 +278,9 @@ namespace NNGame
                 //TODO: MainMenu Camera
                 //_camera.Move(GetMovementDirection(), gameTime.GetElapsedSeconds());
             }
+
+            //if (_steamworksManager.IsSteamRunning) 
+                //SteamAPI.RunCallbacks();
 
             base.Update(gameTime);
         }
