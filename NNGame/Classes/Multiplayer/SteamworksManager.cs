@@ -175,7 +175,8 @@ namespace NNGame.Classes
 
         private void OnSteamShutdown(SteamShutdown_t pCallBack)
         {
-
+            SteamAPI.Shutdown();
+            UserAvatar?.Dispose();            
         }
 
         private void OnGameOverlayActivated(GameOverlayActivated_t pCallback)
