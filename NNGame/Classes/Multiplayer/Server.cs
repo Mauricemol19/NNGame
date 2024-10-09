@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Steamworks;
 
-namespace NNGame.Classes
+namespace NNGame.Classes.Multiplayer
 {
     public class Server
     {
@@ -25,7 +25,7 @@ namespace NNGame.Classes
         public bool Init()
         {
             EServerMode eMode = EServerMode.eServerModeAuthenticationAndSecure;
-            
+
             //EServerMode eMode = EServerMode.eServerModeNoAuthentication;
 
             bInitialized = GameServer.Init(0, SERVER_AUTHENTICATION_PORT, SERVER_PORT, eMode, SERVER_VERSION);
