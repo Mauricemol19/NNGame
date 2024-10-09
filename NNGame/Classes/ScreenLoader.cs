@@ -20,18 +20,11 @@ namespace NNGame.Classes
             ScreenManager = _screenManager; 
             GraphicsDevice = _graphicsDevice;
 
+            //Main._graphics.PreferredBackBufferWidth = Main.GraphicsDevice.Adapter.CurrentDisplayMode.Width;
+            //Main._graphics.PreferredBackBufferHeight = Main.GraphicsDevice.Adapter.CurrentDisplayMode.Height;
+
             //LoadMenu();
             LoadWorldMap();
-        }
-
-        public void LoadMainMenu()
-        {
-
-        }
-
-        public void LoadMap(ushort id)
-        {
-            //ScreenManager.LoadScreen(new Menu(Main), new FadeTransition(GraphicsDevice, Color.Black));
         }
 
         public void LoadMenu()

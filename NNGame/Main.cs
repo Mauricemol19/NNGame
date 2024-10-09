@@ -11,12 +11,11 @@ using GeonBit.UI;
 using GeonBit.UI.Entities;
 using Vector2 = Microsoft.Xna.Framework.Vector2;
 using NNGame.Classes.Cameras;
+using NNGame.Classes.Characters;
 using System.Diagnostics;
 using MonoGame.Extended;
 using Steamworks;
 using System;
-using MonoGame.Extended.Graphics;
-using NNGame.Classes.Characters;
 
 namespace NNGame
 {
@@ -53,8 +52,7 @@ namespace NNGame
 
         public GameMenu _gameMenu;
 
-        public Player _playerChar;
-        private SpriteSheet _spriteSheet;
+        public Character _playerChar;
 
         //private bool wDown, aDown, sDown, dDown = false;
 
@@ -89,7 +87,7 @@ namespace NNGame
 
             _graphics.ApplyChanges();            
 
-            //Steamworks//
+            //Steamworks
             _steamworksManager = new SteamworksManager();
 
             if (!SteamAPI.Init())
@@ -102,9 +100,8 @@ namespace NNGame
                 _steamworksManager.IsSteamRunning = true;
                 
                 _steamworksManager.Initialize(this);
-            }
-            //Steamworks//
-            
+            }            
+
             _camera = new PlayerCamera(viewportadapter);
                   
             _screenLoader = new ScreenLoader(this, _screenManager, GraphicsDevice);
@@ -112,7 +109,7 @@ namespace NNGame
             //init GUI
             UserInterface.Initialize(this.Content, BuiltinThemes.hd);
 
-            //init ingame menu
+            //init Main Menu
             _gameMenu = new GameMenu();
 
             IsFixedTimeStep = true;
@@ -125,7 +122,7 @@ namespace NNGame
         /// </summary>
         protected override void LoadContent()
         {
-            //Load the ui spritebatch
+            //Load the spritebatch
             try
             {
                 _spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -147,56 +144,23 @@ namespace NNGame
                 Exit();
             }
 
-            _playerChar = new Player("Sprites/test", new Vector2(400, 400));       
+            _playerChar = new("Sprites/test", new Vector2(400, 400));       
 
             //Load player sprite
-            _playerChar._spriteTexture = this.Content.Load<Texture2D>(_playerChar.SpriteName);           
+            try
+            {
+                _playerChar._spriteTexture = this.Content.Load<Texture2D>(_playerChar.SpriteName);
+            }
+            catch
+            {
+                Debug.WriteLine("Unable to load character sprite");
+                Exit();
+            }      
 
             _steamworksManager.InitializeCallbacks();
 
             _tileText = "";
             _tileTextPosition = new Vector2(-5, -80);
-
-            _tiledMap = this.Content.Load<TiledMap>("TileMaps/Grass");
-
-            //Player//
-            Texture2D adventurerTexture = this.Content.Load<Texture2D>("Sprites/adventurer");
-            Texture2DAtlas atlas = Texture2DAtlas.Create("Sprites/adventurer", adventurerTexture, 50, 37);
-            _spriteSheet = new SpriteSheet("Sprites/adventurer", atlas);
-
-            _spriteSheet.DefineAnimation("attack", builder =>
-            {
-                builder.IsLooping(true)
-                       .AddFrame(regionIndex: 0, duration: TimeSpan.FromSeconds(0.1))
-                       .AddFrame(1, TimeSpan.FromSeconds(0.1))
-                       .AddFrame(2, TimeSpan.FromSeconds(0.1))
-                       .AddFrame(3, TimeSpan.FromSeconds(0.1))
-                       .AddFrame(4, TimeSpan.FromSeconds(0.1))
-                       .AddFrame(5, TimeSpan.FromSeconds(0.1));
-            });
-
-            _spriteSheet.DefineAnimation("idle", builder =>
-            {
-                builder.IsLooping(true)
-                       .AddFrame(6, TimeSpan.FromSeconds(0.1))
-                       .AddFrame(7, TimeSpan.FromSeconds(0.1))
-                       .AddFrame(8, TimeSpan.FromSeconds(0.1))
-                       .AddFrame(9, TimeSpan.FromSeconds(0.1));
-            });
-
-            _spriteSheet.DefineAnimation("run", builder =>
-            {
-                builder.IsLooping(true)
-                       .AddFrame(10, TimeSpan.FromSeconds(0.1))
-                       .AddFrame(11, TimeSpan.FromSeconds(0.1))
-                       .AddFrame(12, TimeSpan.FromSeconds(0.1))
-                       .AddFrame(13, TimeSpan.FromSeconds(0.1))
-                       .AddFrame(14, TimeSpan.FromSeconds(0.1))
-                       .AddFrame(15, TimeSpan.FromSeconds(0.1));
-            });
-
-            _playerChar._animatedSprite = new AnimatedSprite(_spriteSheet, "idle");
-            //Player//
         }       
 
         /// <summary>
@@ -206,16 +170,13 @@ namespace NNGame
         protected override void Draw(GameTime gameTime)
         {
             if (_current_screen != "Menu" && _tiledMapRenderer != null)
-            {                
+            {
                 //Clear GraphicsDevice 
                 GraphicsDevice.Clear(Color.CornflowerBlue);
                 GraphicsDevice.Clear(Color.Black);
 
                 var viewMatrix = _camera.GetViewMatrix();
                 var transformMatrix = viewMatrix;
-
-                //Player
-                _spriteBatch.Draw(_playerChar._animatedSprite, Vector2.Zero, 0.0f, new Vector2(3, 3));
 
                 //Draw tiledmap
                 _tiledMapRenderer.Draw(viewMatrix);
@@ -283,8 +244,6 @@ namespace NNGame
         /// <param name="gameTime"></param>
         protected override void Update(GameTime gameTime)
         {
-            _playerChar._animatedSprite.Update(gameTime);
-
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))          
                 Exit();        
 
