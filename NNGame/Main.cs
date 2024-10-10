@@ -242,6 +242,9 @@ namespace NNGame
                 var viewMatrix = _camera.GetViewMatrix();
                 var transformMatrix = viewMatrix;               
 
+                //Player
+                _spriteBatch.Draw(_playerChar._animatedSprite, Vector2.Zero, 0.0f, new Vector2(3, 3));
+
                 //Draw tiledmap
                 _tiledMapRenderer.Draw(viewMatrix);
                 //_tiledMapRenderer.Draw(_tiledMap.GetLayer("Floor"), _camera.GetViewMatrix());
