@@ -20,7 +20,7 @@ namespace NNGame.Classes.Screens
 
         public override void LoadContent()
         {
-            main._tiledMap = main.Content.Load<TiledMap>("TileMaps/Grass");
+            //main._tiledMap = main.Content.Load<TiledMap>("TileMaps/Grass");
             main._tiledMapRenderer = new TiledMapRenderer(GraphicsDevice, main._tiledMap);
             main._spriteBatch = new SpriteBatch(GraphicsDevice);
             main._current_screen = name;

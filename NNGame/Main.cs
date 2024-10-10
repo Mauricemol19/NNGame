@@ -56,7 +56,7 @@ namespace NNGame
 
         public GameMenu _gameMenu;
 
-        public Player _playerChar;
+        public Character _playerChar;
         private SpriteSheet _spriteSheet;
 
         private KeyboardListener _keyboardListener;
@@ -79,15 +79,15 @@ namespace NNGame
         protected override void Initialize()
         {
             //var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 960, 550);
-            var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 1080, 670);
+            var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 1240, 830);
 
             Window.AllowUserResizing = true;
 
             _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
             _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
 
-            _graphics.ToggleFullScreen();
-            Window.IsBorderless = true;
+            //_graphics.ToggleFullScreen();
+            //Window.IsBorderless = true;
             
             //Soft mode
             _graphics.HardwareModeSwitch = false;
@@ -152,7 +152,7 @@ namespace NNGame
                 Exit();
             }
 
-            _playerChar = new Player("Sprites/test", new Vector2(400, 400));       
+            _playerChar = new Character("Sprites/test", new Vector2(400, 400));       
 
             //Load player sprite
             _playerChar._spriteTexture = this.Content.Load<Texture2D>(_playerChar.SpriteName);           
@@ -163,12 +163,12 @@ namespace NNGame
             _tileTextPosition = new Vector2(-5, -80);
 
             //Draw tiled map
-            //_tiledMap = this.Content.Load<MonoGame.Extended.Tiled.TiledMap>("TileMaps/Grass");
+            //_tiledMap = this.Content.Load<TiledMap>("TileMaps/Grass");
 
             //Player Animations//
-            Texture2D adventurerTexture = this.Content.Load<Texture2D>("Sprites/adventurer");
-            Texture2DAtlas atlas = Texture2DAtlas.Create("Sprites/adventurer", adventurerTexture, 50, 37);
-            _spriteSheet = new SpriteSheet("Sprites/adventurer", atlas);
+            Texture2D playerTextureRight = this.Content.Load<Texture2D>("Sprites/Player");
+            Texture2DAtlas atlas = Texture2DAtlas.Create("Sprites/Player", playerTextureRight, 50, 37);
+            _spriteSheet = new SpriteSheet("Sprites/Player", atlas);
 
             _spriteSheet.DefineAnimation("attack", builder =>
             {
@@ -181,16 +181,25 @@ namespace NNGame
                        .AddFrame(5, TimeSpan.FromSeconds(0.1));
             });
 
-            _spriteSheet.DefineAnimation("idle", builder =>
+            _spriteSheet.DefineAnimation("idleLeft", builder =>
             {
                 builder.IsLooping(true)
-                       .AddFrame(6, TimeSpan.FromSeconds(0.1))
-                       .AddFrame(7, TimeSpan.FromSeconds(0.1))
-                       .AddFrame(8, TimeSpan.FromSeconds(0.1))
-                       .AddFrame(9, TimeSpan.FromSeconds(0.1));
+                       .AddFrame(5, TimeSpan.FromSeconds(0.2))
+                       .AddFrame(6, TimeSpan.FromSeconds(0.2))
+                       .AddFrame(7, TimeSpan.FromSeconds(0.2))
+                       .AddFrame(8, TimeSpan.FromSeconds(0.2));
             });
 
-            _spriteSheet.DefineAnimation("runRight", builder =>
+            _spriteSheet.DefineAnimation("idleRight", builder =>
+            {
+                builder.IsLooping(true)
+                       .AddFrame(22, TimeSpan.FromSeconds(0.2))
+                       .AddFrame(23, TimeSpan.FromSeconds(0.2))
+                       .AddFrame(24, TimeSpan.FromSeconds(0.2))
+                       .AddFrame(25, TimeSpan.FromSeconds(0.2));
+            });
+
+            _spriteSheet.DefineAnimation("runLeft", builder =>
             {
                 builder.IsLooping(true)
                        .AddFrame(10, TimeSpan.FromSeconds(0.1))
@@ -201,28 +210,51 @@ namespace NNGame
                        .AddFrame(15, TimeSpan.FromSeconds(0.1));
             });
 
+            _spriteSheet.DefineAnimation("runRight", builder =>
+            {     
+                builder.IsLooping(true)
+                       .AddFrame(26, TimeSpan.FromSeconds(0.1))
+                       .AddFrame(27, TimeSpan.FromSeconds(0.1))
+                       .AddFrame(28, TimeSpan.FromSeconds(0.1))
+                       .AddFrame(29, TimeSpan.FromSeconds(0.1))
+                       .AddFrame(30, TimeSpan.FromSeconds(0.1))
+                       .AddFrame(31, TimeSpan.FromSeconds(0.1));
+            });
+
             //Set starting to idle
-            _playerChar._animatedSprite = new AnimatedSprite(_spriteSheet, "idle");
+            _playerChar._animatedSprite = new AnimatedSprite(_spriteSheet, "idleRight");
 
             _keyboardListener = new KeyboardListener();
-
-            //runRight//
+           
             _keyboardListener.KeyPressed += (sender, eventArgs) =>
             {
-                if (eventArgs.Key == Keys.D && _playerChar._animatedSprite.CurrentAnimation == "idle")
+                var currAnim = _playerChar._animatedSprite.CurrentAnimation;
+
+                if (eventArgs.Key == Keys.D && currAnim != "runRight")
                 {
                     _playerChar._animatedSprite.SetAnimation("runRight");           
+                }
+
+                if (eventArgs.Key == Keys.A && currAnim != "runLeft")
+                {
+                    _playerChar._animatedSprite.SetAnimation("runLeft");
                 }
             };
 
             _keyboardListener.KeyReleased += (sender, eventArgs) =>
             {
-                if (eventArgs.Key == Keys.D && _playerChar._animatedSprite.CurrentAnimation == "runRight")
+                var currAnim = _playerChar._animatedSprite.CurrentAnimation;
+
+                if (eventArgs.Key == Keys.D && currAnim == "runRight")
                 {
-                    _playerChar._animatedSprite.SetAnimation("idle");
+                    _playerChar._animatedSprite.SetAnimation("idleRight");
                 }
-            };
-            //Idle//
+
+                if (eventArgs.Key == Keys.A && currAnim == "runLeft")
+                {
+                    _playerChar._animatedSprite.SetAnimation("idleLeft");
+                }
+            };           
 
             //Player Animations//
         }       
@@ -242,9 +274,6 @@ namespace NNGame
                 var viewMatrix = _camera.GetViewMatrix();
                 var transformMatrix = viewMatrix;               
 
-                //Player
-                _spriteBatch.Draw(_playerChar._animatedSprite, Vector2.Zero, 0.0f, new Vector2(3, 3));
-
                 //Draw tiledmap
                 _tiledMapRenderer.Draw(viewMatrix);
                 //_tiledMapRenderer.Draw(_tiledMap.GetLayer("Floor"), _camera.GetViewMatrix());
@@ -256,12 +285,16 @@ namespace NNGame
                 //Open spritebatch with ref to transformMatrix for scaling
                 _spriteBatch.Begin(transformMatrix: transformMatrix);
 
-                //Draw player character
-                if (_playerChar != null)
-                    //_spriteBatch.Draw(_playerChar._spriteTexture, _playerChar.SpritePosition, null, Color.White, 0.0f, Vector2.Zero, 0.08f, SpriteEffects.None, 1);
-
                 //Player
                 _spriteBatch.Draw(_playerChar._animatedSprite, _playerChar.SpritePosition, 0.0f, new Vector2(3, 3));
+
+                //Draw player character
+                //if (_playerChar != null)
+                    //_spriteBatch.Draw(_playerChar._spriteTexture, _playerChar.SpritePosition, null, Color.White, 0.0f, Vector2.Zero, 0.08f, SpriteEffects.None, 1);
+
+                //Player animated
+                if (_playerChar != null)
+                    _spriteBatch.Draw(_playerChar._animatedSprite, _playerChar.SpritePosition, 0.0f, new Vector2(3, 3));
 
                 //Draw debug playerlocation
                 if (_playerChar != null)
@@ -313,10 +346,7 @@ namespace NNGame
         /// </summary>
         /// <param name="gameTime"></param>
         protected override void Update(GameTime gameTime)
-        {
-            _keyboardListener.Update(gameTime);
-            _playerChar._animatedSprite.Update(gameTime);
-
+        {           
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))          
                 Exit();        
 
@@ -359,6 +389,9 @@ namespace NNGame
 
             if (_steamworksManager.IsSteamRunning) 
                 SteamAPI.RunCallbacks();
+
+            _keyboardListener.Update(gameTime);
+            _playerChar._animatedSprite.Update(gameTime);
 
             base.Update(gameTime);
         }

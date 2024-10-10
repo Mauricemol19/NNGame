@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Extended.Graphics;
 
 namespace NNGame.Classes.Characters
 {    
@@ -10,6 +11,8 @@ namespace NNGame.Classes.Characters
         public Vector2 SpritePosition { get; set; }
 
         public Texture2D _spriteTexture;
+
+        public AnimatedSprite _animatedSprite;
 
         public Character(string spriteName, Vector2 spritePosition) 
         { 
