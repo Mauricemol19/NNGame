@@ -9,7 +9,7 @@ using NNGame.Classes;
 using NNGame.Classes.Gui;
 using GeonBit.UI;
 using GeonBit.UI.Entities;
-using Vector2 = Microsoft.Xna.Framework.Vector2;
+//using Vector2 = Microsoft.Xna.Framework.Vector2;
 using NNGame.Classes.Cameras;
 using System.Diagnostics;
 using MonoGame.Extended;
@@ -20,6 +20,7 @@ using NNGame.Classes.Characters;
 using System.Diagnostics.Tracing;
 using MonoGame.Extended.Animations;
 using MonoGame.Extended.Input.InputListeners;
+using Color = Microsoft.Xna.Framework.Color;
 
 namespace NNGame
 {
@@ -34,6 +35,7 @@ namespace NNGame
         public SteamworksManager _steamworksManager;
 
         public TiledMap _tiledMap;
+        //public Map _tiledMap;
         public TiledMapRenderer _tiledMapRenderer;
 
         private SpriteFont _tileTextFont;
@@ -79,7 +81,7 @@ namespace NNGame
         protected override void Initialize()
         {
             //var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 960, 550);
-            var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 1240, 830);
+            var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 1920, 1080);
 
             Window.AllowUserResizing = true;
 
@@ -152,6 +154,11 @@ namespace NNGame
                 Exit();
             }
 
+            //Loading of map should move to their own class
+            _tiledMap = Content.Load<TiledMap>("TileMaps/Grass");
+            _tiledMapRenderer = new TiledMapRenderer(GraphicsDevice, _tiledMap);
+            _spriteBatch = new SpriteBatch(GraphicsDevice);
+
             _playerChar = new Character("Sprites/test", new Vector2(400, 400));       
 
             //Load player sprite
@@ -160,10 +167,7 @@ namespace NNGame
             _steamworksManager.InitializeCallbacks();
 
             _tileText = "";
-            _tileTextPosition = new Vector2(-5, -80);
-
-            //Draw tiled map
-            //_tiledMap = this.Content.Load<TiledMap>("TileMaps/Grass");
+            _tileTextPosition = new Vector2(-5, -80);          
 
             //Player Animations//
             Texture2D playerTextureRight = this.Content.Load<Texture2D>("Sprites/Player");
@@ -265,7 +269,8 @@ namespace NNGame
         /// <param name="gameTime"></param>
         protected override void Draw(GameTime gameTime)
         {
-            if (_current_screen != "Menu" && _tiledMapRenderer != null)
+            //if (_current_screen != "Menu" && _tiledMapRenderer != null)
+            if (_current_screen != "Menu" && _tiledMap != null)
             {                
                 //Clear GraphicsDevice 
                 GraphicsDevice.Clear(Color.CornflowerBlue);
@@ -366,8 +371,7 @@ namespace NNGame
                     _camera.Move(_playerChar.SpritePosition - new Vector2(-20, -40));           
                 }
 
-                //**DEBUG**//
-                /*
+                //**DEBUG**//                
                 if (wp_xy.X >= 0 && wp_xy.Y >= 0 && wp_xy.X <= _tiledMap.WidthInPixels && wp_xy.Y <= _tiledMap.HeightInPixels)
                 {
                     UpdateTileText((int)wp_xy.X, (int)wp_xy.Y, ms);
@@ -377,8 +381,7 @@ namespace NNGame
                     TiledMapTile tile = _tiledMap.TileLayers[0].GetTile((ushort)tileX, (ushort)tileY);
 
                     _selectedTile = tile;
-                }           
-                */
+                }                           
                 //**DEBUG**//
             }
             else 
@@ -497,14 +500,15 @@ namespace NNGame
                 //**DEBUG**//
                 _camera.GetTileXYAtPoint(x, y, out int tileX, out int tileY);
 
-                var tile = _tiledMap.TileLayers[0].GetTile((ushort)tileX, (ushort)tileY);
+                //var tile = _tiledMap.TileLayers[0].GetTile((ushort)tileX, (ushort)tileY);
 
                 Vector2 wp_xy = new(ms.X, ms.Y);
 
                 var p = _gameMenu.panel1.Children[0] as Paragraph;
                 {
                     p.Text = $"Player pos: x:{_playerChar.SpritePosition.X} , y:{_playerChar.SpritePosition.Y}\n";
-                    p.Text += $"Mouse tile hover: x:{tileX} y:{tileY} TileType: [" + _camera.GetTileText(_tiledMap, tile.GlobalIdentifier) + "]\n";
+                    //p.Text += $"Mouse tile hover: x:{tileX} y:{tileY} TileType: [" + _camera.GetTileText(_tiledMap, tile.GlobalIdentifier) + "]\n";
+                    p.Text += $"Mouse tile hover: x:{tileX} y:{tileY} TileType: []\n";
                     p.Text += $"Mouse pos in screen: x:{wp_xy.X} y:{wp_xy.Y}";
                 }
                 //**DEBUG**//

@@ -11,6 +11,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
@@ -30,6 +31,9 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup>
+    <MonoGameExtendedPipelineReferencePath>$(MSBuildThisFileDirectory)\pipeline-references</MonoGameExtendedPipelineReferencePath>
+  </PropertyGroup>
   <ItemGroup>
     <None Remove="Icon.ico" />
     <None Remove="Icon.bmp" />
@@ -40,10 +44,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="GeonBit.UI" Version="4.3.0.4" />
+    <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.2.1105" />
     <PackageReference Include="MonoGame.Extended" Version="4.0.3" />
     <PackageReference Include="MonoGame.Extended.Content.Pipeline" Version="4.0.3" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.2.1105" />
-    <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.2.1105" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Classes\EventManager\" />
@@ -56,6 +60,12 @@
     <Folder Include="Content\Tilesheets\" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="MonoGame.Extended">
+      <HintPath>Content\pipeline-references\MonoGame.Extended.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoGame.Extended.Content.Pipeline">
+      <HintPath>Content\pipeline-references\MonoGame.Extended.Content.Pipeline.dll</HintPath>
+    </Reference>
     <Reference Include="Steamworks.NET">
       <HintPath>bin\x86\Debug\net8.0\Steamworks.NET.dll</HintPath>
     </Reference>
