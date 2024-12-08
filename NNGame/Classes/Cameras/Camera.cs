@@ -38,17 +38,7 @@ namespace NNGame.Classes.Cameras
         }
 
         public Vector2 GetWXY(MouseState mouseState, Vector2 worldPos)
-        {
-            /*
-            float relativeMouseX = mouseState.X + _camera.Position.X;
-            float relativeMouseY = mouseState.Y + _camera.Position.Y;
-
-            float rmx = worldPos.X = relativeMouseX / 32;
-            float rmy = worldPos.Y = relativeMouseY / 32;           
-   
-            return new Vector2((int)rmx, (int)rmy);
-            */
-
+        {            
             return _camera.ScreenToWorld(mouseState.X, mouseState.Y);                        
         }    
       
