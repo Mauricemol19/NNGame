@@ -21,6 +21,7 @@ using System.Diagnostics.Tracing;
 using MonoGame.Extended.Animations;
 using MonoGame.Extended.Input.InputListeners;
 using Color = Microsoft.Xna.Framework.Color;
+using IndependentResolutionRendering;
 
 namespace NNGame
 {
@@ -34,8 +35,7 @@ namespace NNGame
 
         public SteamworksManager _steamworksManager;
 
-        public TiledMap _tiledMap;
-        //public Map _tiledMap;
+        public TiledMap _tiledMap;    
         public TiledMapRenderer _tiledMapRenderer;
 
         private SpriteFont _tileTextFont;
@@ -68,6 +68,15 @@ namespace NNGame
         public Main()
         {
             _graphics = new GraphicsDeviceManager(this);
+
+            Resolution.Init(ref _graphics);       
+            
+            Resolution.SetVirtualResolution(1024, 768);
+            //Resolution.SetResolution(1920, 1080, true);
+            Resolution.SetResolution(GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width,
+                GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height, 
+                true);
+
             Content.RootDirectory = "Content";
             IsMouseVisible = true;                     
 
@@ -80,17 +89,20 @@ namespace NNGame
         /// </summary>
         protected override void Initialize()
         {
-            //var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 960, 550);
-            var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 1920, 1080);
+            var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 720, 480);
+            //var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 1920, 1080);            
 
             Window.AllowUserResizing = true;
 
-            _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
-            _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
+            //_graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
+            //_graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
 
-            //_graphics.ToggleFullScreen();
+            //_graphics.PreferredBackBufferWidth = 2640;
+            //_graphics.PreferredBackBufferHeight = 1920;
+       
             //Window.IsBorderless = true;
-            
+            //_graphics.IsFullScreen = false;            
+
             //Soft mode
             _graphics.HardwareModeSwitch = false;
 
@@ -154,12 +166,12 @@ namespace NNGame
                 Exit();
             }
 
-            //Loading of map should move to their own class
+            //TODO: Loading of map should move to their own class
             _tiledMap = Content.Load<TiledMap>("TileMaps/Grass");
             _tiledMapRenderer = new TiledMapRenderer(GraphicsDevice, _tiledMap);
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            _playerChar = new Character("Sprites/test", new Vector2(400, 400));       
+            _playerChar = new Character("Sprites/test", new Vector2(200, 200));       
 
             //Load player sprite
             _playerChar._spriteTexture = this.Content.Load<Texture2D>(_playerChar.SpriteName);           
@@ -228,6 +240,7 @@ namespace NNGame
             //Set starting to idle
             _playerChar._animatedSprite = new AnimatedSprite(_spriteSheet, "idleRight");
 
+            //Player Input//
             _keyboardListener = new KeyboardListener();
            
             _keyboardListener.KeyPressed += (sender, eventArgs) =>
@@ -280,31 +293,29 @@ namespace NNGame
                 var transformMatrix = viewMatrix;               
 
                 //Draw tiledmap
-                _tiledMapRenderer.Draw(viewMatrix);
-                //_tiledMapRenderer.Draw(_tiledMap.GetLayer("Floor"), _camera.GetViewMatrix());
-                //_tiledMapRenderer.Draw(_tiledMap.GetLayer("Objects"), _camera.GetViewMatrix());
+                //_tiledMapRenderer.Draw(viewMatrix);
+                _tiledMapRenderer.Draw(_tiledMap.GetLayer("Floor"), _camera.GetViewMatrix());
+                _tiledMapRenderer.Draw(_tiledMap.GetLayer("Objects"), _camera.GetViewMatrix());
 
                 //Draw GUI
                 UserInterface.Active.Draw(_spriteBatch);                                 
                                         
                 //Open spritebatch with ref to transformMatrix for scaling
                 _spriteBatch.Begin(transformMatrix: transformMatrix);
-
-                //Player
-                _spriteBatch.Draw(_playerChar._animatedSprite, _playerChar.SpritePosition, 0.0f, new Vector2(3, 3));
-
+             
                 //Draw player character
                 //if (_playerChar != null)
                     //_spriteBatch.Draw(_playerChar._spriteTexture, _playerChar.SpritePosition, null, Color.White, 0.0f, Vector2.Zero, 0.08f, SpriteEffects.None, 1);
 
                 //Player animated
                 if (_playerChar != null)
-                    _spriteBatch.Draw(_playerChar._animatedSprite, _playerChar.SpritePosition, 0.0f, new Vector2(3, 3));
+                    _spriteBatch.Draw(_playerChar._animatedSprite, _playerChar.SpritePosition, 0.0f, new Vector2(1f, 1f));
 
                 //Draw debug playerlocation
                 if (_playerChar != null)
                     //_spriteBatch.DrawString(_tileTextFont, _tileText, _tileTextPosition, Color.Blue, 0.0f, Vector2.Zero, 1.0f, SpriteEffects.None, 0.0f);
 
+                //DEBUG steamworks//
                 if (_steamworksManager.IsSteamRunning)
                 {
                     //Draw your Steam Avatar and Steam Name
@@ -337,13 +348,13 @@ namespace NNGame
                 }
 
                 _spriteBatch.End();               
-
-                base.Draw(gameTime);
             }
             else
             {
                 //Draw Main Menu
             }
+
+            base.Draw(gameTime);
         }       
 
         /// <summary>
@@ -365,6 +376,7 @@ namespace NNGame
                 //Set player spriteposition and lock camera to player
                 if (_playerChar != null)
                 {
+                    //Movement Speed//
                     _playerChar.SpritePosition += movementDirection * 4;
 
                     //TODO: change to dynamic offset of sprite
