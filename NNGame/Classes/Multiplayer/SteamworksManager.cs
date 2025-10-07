@@ -42,8 +42,7 @@ namespace NNGame.Classes
             catch (DllNotFoundException e)
             {                
                 Debug.WriteLine("[Steamworks.NET] Could not load [lib]steam_api.dll/so/dylib." +
-                                      " It's likely not in the correct location.\n" +
-                                      e);
+                                      " It's likely not in the correct location.\n" + e);
                 main.Exit();
             }
 

@@ -9,10 +9,6 @@
 ////THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //////////////////////////////////////////////////////////////////////////
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -22,10 +18,10 @@ namespace IndependentResolutionRendering
     {
         static private GraphicsDeviceManager _Device = null;
 
-        static private int _Width = 800;
-        static private int _Height = 600;
-        static private int _VWidth = 1024;
-        static private int _VHeight = 768;
+        static private int _Width;
+        static private int _Height;
+        static private int _VWidth = 1920;
+        static private int _VHeight = 1080;
         static private Matrix _ScaleMatrix;
         static private bool _FullScreen = false;
         static private bool _dirtyMatrix = true;
@@ -38,7 +34,6 @@ namespace IndependentResolutionRendering
             _dirtyMatrix = true;
             ApplyResolutionSettings();
         }
-
 
         static public Matrix getTransformationMatrix()
         {
@@ -138,10 +133,9 @@ namespace IndependentResolutionRendering
                            1f);
         }
 
-
         static public void FullViewport()
         {
-            Viewport vp = new Viewport();
+            Viewport vp = new();
             vp.X = vp.Y = 0;
             vp.Width = _Width;
             vp.Height = _Height;
@@ -174,14 +168,15 @@ namespace IndependentResolutionRendering
             }
 
             // set up the new viewport centered in the backbuffer
-            Viewport viewport = new Viewport();
-
-            viewport.X = (_Device.PreferredBackBufferWidth / 2) - (width / 2);
-            viewport.Y = (_Device.PreferredBackBufferHeight / 2) - (height / 2);
-            viewport.Width = width;
-            viewport.Height = height;
-            viewport.MinDepth = 0;
-            viewport.MaxDepth = 1;
+            Viewport viewport = new()
+            {
+                X = (_Device.PreferredBackBufferWidth / 2) - (width / 2),
+                Y = (_Device.PreferredBackBufferHeight / 2) - (height / 2),
+                Width = width,
+                Height = height,
+                MinDepth = 0,
+                MaxDepth = 1
+            };
 
             if (changed)
             {
@@ -190,6 +185,5 @@ namespace IndependentResolutionRendering
 
             _Device.GraphicsDevice.Viewport = viewport;
         }
-
     }
 }
