@@ -21,53 +21,64 @@ using System.Diagnostics.Tracing;
 using MonoGame.Extended.Animations;
 using MonoGame.Extended.Input.InputListeners;
 using Color = Microsoft.Xna.Framework.Color;
+using IndependentResolutionRendering;
 
 namespace NNGame
 {
     /// <summary>
-    /// Main file inherited from Game
+    /// Main entry file
     /// </summary>
     public class Main : Game
     {
+        //MonoGame
         public GraphicsDeviceManager _graphics;
         public SpriteBatch _spriteBatch;
 
-        public SteamworksManager _steamworksManager;
+        //Steamworks
+        public SteamworksManager _steamworksManager;       
 
-        public TiledMap _tiledMap;
-        //public Map _tiledMap;
+        //TiledMap
+        public TiledMap _tiledMap;    
         public TiledMapRenderer _tiledMapRenderer;
 
+        //Screenloader
+        private ScreenLoader _screenLoader;
+        private ScreenManager _screenManager;
+
+        //Gui Text
         private SpriteFont _tileTextFont;
         private string _tileText;
         private Vector2 _tileTextPosition;
 
+        //Camera & positions
         public PlayerCamera _camera;
         public Vector2 _cameraPosition;
+        public Vector2 _worldPosition;             
 
-        public Vector2 _worldPosition;
-
-        private readonly ScreenManager _screenManager;
-
-        private ScreenLoader _screenLoader;
-
+        //Tiles
         public TiledMapTile _selectedTile;
         public TiledMapTile _playerLocation;
 
+        //Menu
         public string _current_screen = "Menu";
-
         public GameMenu _gameMenu;
 
+        //Player
         public Character _playerChar;
+        //public Texture2D _playerTexture;
+
+        //Spritesheets
         private SpriteSheet _spriteSheet;
 
+        //Listeners
         private KeyboardListener _keyboardListener;
-
-        //private bool wDown, aDown, sDown, dDown = false;
 
         public Main()
         {
             _graphics = new GraphicsDeviceManager(this);
+
+            Resolution.Init(ref _graphics);                              
+
             Content.RootDirectory = "Content";
             IsMouseVisible = true;                     
 
@@ -79,23 +90,14 @@ namespace NNGame
         /// Initialize app
         /// </summary>
         protected override void Initialize()
-        {
-            //var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 960, 550);
-            var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 1920, 1080);
+        {          
+            var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 720, 480);
+            //var viewportadapter = new BoxingViewportAdapter(Window, GraphicsDevice, 1920, 1080);            
 
+            //Window
+            Window.IsBorderless = false;
             Window.AllowUserResizing = true;
-
-            _graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
-            _graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
-
-            //_graphics.ToggleFullScreen();
-            //Window.IsBorderless = true;
-            
-            //Soft mode
-            _graphics.HardwareModeSwitch = false;
-
-            _graphics.ApplyChanges();            
-
+           
             //Steamworks//
             _steamworksManager = new SteamworksManager();
 
@@ -132,7 +134,7 @@ namespace NNGame
         /// </summary>
         protected override void LoadContent()
         {
-            //Load the ui spritebatch
+            //UI Spritebatch//
             try
             {
                 _spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -142,8 +144,9 @@ namespace NNGame
                 Debug.WriteLine("LoadContent(): Unable to Load spritebatch", "Error");
                 Exit();
             }
+            //UI Spritebatch//
 
-            //Load spritefont
+            //Spritefont//
             try
             {               
                 _tileTextFont = this.Content.Load<SpriteFont>("Fonts/font");               
@@ -151,25 +154,29 @@ namespace NNGame
             catch 
             {
                 Debug.WriteLine("LoadContent(): Unable to Load spritefont", "Error");
-                Exit();
+                Exit();                
             }
+            //Spritefont//
 
-            //Loading of map should move to their own class
+            //TileMap//
             _tiledMap = Content.Load<TiledMap>("TileMaps/Grass");
             _tiledMapRenderer = new TiledMapRenderer(GraphicsDevice, _tiledMap);
+            //TileMap//
+
+            //Player sprite//
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            _playerChar = new Character("Sprites/test", new Vector2(400, 400));       
+            _playerChar = new Character("Sprites/test", new Vector2(200, 200));
 
-            //Load player sprite
             _playerChar._spriteTexture = this.Content.Load<Texture2D>(_playerChar.SpriteName);           
 
             _steamworksManager.InitializeCallbacks();
 
             _tileText = "";
-            _tileTextPosition = new Vector2(-5, -80);          
+            _tileTextPosition = new Vector2(-5, -80);
+            //Player sprite//
 
-            //Player Animations//
+            //Player Anims//
             Texture2D playerTextureRight = this.Content.Load<Texture2D>("Sprites/Player");
             Texture2DAtlas atlas = Texture2DAtlas.Create("Sprites/Player", playerTextureRight, 50, 37);
             _spriteSheet = new SpriteSheet("Sprites/Player", atlas);
@@ -223,11 +230,13 @@ namespace NNGame
                        .AddFrame(29, TimeSpan.FromSeconds(0.1))
                        .AddFrame(30, TimeSpan.FromSeconds(0.1))
                        .AddFrame(31, TimeSpan.FromSeconds(0.1));
-            });
+            });            
 
             //Set starting to idle
             _playerChar._animatedSprite = new AnimatedSprite(_spriteSheet, "idleRight");
+            //Player Anims//
 
+            //Player Input//
             _keyboardListener = new KeyboardListener();
            
             _keyboardListener.KeyPressed += (sender, eventArgs) =>
@@ -259,7 +268,6 @@ namespace NNGame
                     _playerChar._animatedSprite.SetAnimation("idleLeft");
                 }
             };           
-
             //Player Animations//
         }       
 
@@ -269,42 +277,42 @@ namespace NNGame
         /// <param name="gameTime"></param>
         protected override void Draw(GameTime gameTime)
         {
+            Resolution.BeginDraw();           
+
             //if (_current_screen != "Menu" && _tiledMapRenderer != null)
             if (_current_screen != "Menu" && _tiledMap != null)
             {                
                 //Clear GraphicsDevice 
-                GraphicsDevice.Clear(Color.CornflowerBlue);
-                GraphicsDevice.Clear(Color.Black);
+                //GraphicsDevice.Clear(Color.CornflowerBlue);
+                //GraphicsDevice.Clear(Color.Black);
 
                 var viewMatrix = _camera.GetViewMatrix();
                 var transformMatrix = viewMatrix;               
 
-                //Draw tiledmap
-                _tiledMapRenderer.Draw(viewMatrix);
-                //_tiledMapRenderer.Draw(_tiledMap.GetLayer("Floor"), _camera.GetViewMatrix());
-                //_tiledMapRenderer.Draw(_tiledMap.GetLayer("Objects"), _camera.GetViewMatrix());
+                //Draw tiledmap Background               
+                _tiledMapRenderer.Draw(_tiledMap.GetLayer("Floor"), _camera.GetViewMatrix());
+                _tiledMapRenderer.Draw(_tiledMap.GetLayer("Objects"), _camera.GetViewMatrix());
+                //_tiledMapRenderer.Draw(viewMatrix);
 
                 //Draw GUI
                 UserInterface.Active.Draw(_spriteBatch);                                 
                                         
                 //Open spritebatch with ref to transformMatrix for scaling
                 _spriteBatch.Begin(transformMatrix: transformMatrix);
-
-                //Player
-                _spriteBatch.Draw(_playerChar._animatedSprite, _playerChar.SpritePosition, 0.0f, new Vector2(3, 3));
-
-                //Draw player character
+             
+                //Draw player non-animated character
                 //if (_playerChar != null)
                     //_spriteBatch.Draw(_playerChar._spriteTexture, _playerChar.SpritePosition, null, Color.White, 0.0f, Vector2.Zero, 0.08f, SpriteEffects.None, 1);
 
                 //Player animated
                 if (_playerChar != null)
-                    _spriteBatch.Draw(_playerChar._animatedSprite, _playerChar.SpritePosition, 0.0f, new Vector2(3, 3));
+                    _spriteBatch.Draw(_playerChar._animatedSprite, _playerChar.SpritePosition, 0.0f, new Vector2(1f, 1f));
 
                 //Draw debug playerlocation
                 if (_playerChar != null)
                     //_spriteBatch.DrawString(_tileTextFont, _tileText, _tileTextPosition, Color.Blue, 0.0f, Vector2.Zero, 1.0f, SpriteEffects.None, 0.0f);
 
+                //DEBUG steamworks//
                 if (_steamworksManager.IsSteamRunning)
                 {
                     //Draw your Steam Avatar and Steam Name
@@ -337,13 +345,13 @@ namespace NNGame
                 }
 
                 _spriteBatch.End();               
-
-                base.Draw(gameTime);
             }
             else
             {
                 //Draw Main Menu
             }
+
+            base.Draw(gameTime);
         }       
 
         /// <summary>
@@ -365,9 +373,10 @@ namespace NNGame
                 //Set player spriteposition and lock camera to player
                 if (_playerChar != null)
                 {
+                    //Movement Speed//
                     _playerChar.SpritePosition += movementDirection * 4;
 
-                    //TODO: change to dynamic offset of sprite
+                    //TODO: change to dynamic offset of sprite/test
                     _camera.Move(_playerChar.SpritePosition - new Vector2(-20, -40));           
                 }
 
@@ -402,10 +411,9 @@ namespace NNGame
         /// <summary>
         /// Gets Vector2 of movement direction based on user input
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Vector2</returns>
         private Vector2 GetMovementDirection()
-        {
-            //Handle inputs
+        {            
             var movementDirection = Vector2.Zero;
             var state = Keyboard.GetState();
 
@@ -431,66 +439,8 @@ namespace NNGame
             {
                 movementDirection.Normalize();
             }
-
+           
             return movementDirection;
-
-            /*
-            if (state.IsKeyDown(Keys.W))
-            {
-                if (!wDown)
-                {
-                    movementDirection -= Vector2.UnitY;
-
-                    wDown = true;
-                }                
-            }
-            if (state.IsKeyUp(Keys.W))
-            {
-                wDown = false;
-            }            
-
-            if (state.IsKeyDown(Keys.A))
-            {
-                if (!aDown)
-                {
-                    movementDirection -= Vector2.UnitX;
-
-                    aDown = true;
-                }
-            }
-            if (state.IsKeyUp(Keys.A))
-            {
-                aDown = false;
-            }
-
-            if (state.IsKeyDown(Keys.S))
-            {
-                if (!sDown)
-                {
-                    movementDirection += Vector2.UnitY;
-
-                    sDown = true;
-                }
-            }
-            if (state.IsKeyUp(Keys.S))
-            {
-                sDown = false;
-            }
-
-            if (state.IsKeyDown(Keys.D))
-            {
-                if (!dDown)
-                {
-                    movementDirection += Vector2.UnitX;
-
-                    dDown = true;
-                }
-            }
-            if (state.IsKeyUp(Keys.D))
-            {
-                dDown = false;
-            }
-            */
         }
 
         private void UpdateTileText(int x, int y, MouseState ms)
